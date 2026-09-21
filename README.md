@@ -1,7 +1,10 @@
 # KẾ HOẠCH PHÁT TRIỂN DỰ ÁN DIET DELI (POSTGRESQL + REACT + NODE.JS)
+# KẾ HOẠCH PHÁT TRIỂN DỰ ÁN DIET DELI (POSTGRESQL + REACT + NESTJS)
 
 > **Mục tiêu:** Xây dựng nền tảng đặt suất ăn định kỳ (Food Subscription) với React + Tailwind/shadcn/ui, Node.js REST API, **PostgreSQL (Quan hệ)** và thanh toán tự động VietQR (PayOS).
 > **Phân công:** 2 Lập trình viên Full-stack song song theo từng lát cắt tính năng (Vertical Slices), kế thừa dữ liệu và logic từ `dietdelivn`.
+> **Mục tiêu:** Xây dựng nền tảng đặt suất ăn định kỳ (Food Subscription) với React + Tailwind/shadcn/ui, **NestJS (TypeScript Enterprise Architecture)**, **PostgreSQL (Quan hệ)** và thanh toán tự động VietQR (PayOS).
+> **Phân công:** 2 Lập trình viên Full-stack song song theo từng lát cắt tính năng (Vertical Slices - Modules độc lập), kế thừa dữ liệu và logic từ `dietdelivn`.
 
 ---
 
@@ -21,6 +24,12 @@ flowchart TD
         PlanAPI["/api/plans & subscriptions"]
         OrderAPI["/api/meal-orders (Deadline Engine)"]
         PayOSWebhook["/api/payment/payos-webhook"]
+    subgraph Server["Backend (NestJS Modular Architecture)"]
+        AuthMod["AuthModule\n(JWT Guard, Users)"]
+        PlanMod["PlansModule & SubscriptionModule"]
+        OrderMod["MealOrdersModule\n(Deadline Engine)"]
+        PayOSMod["PaymentModule\n(PayOS Webhook)"]
+        MenuMod["MenuModule & KitchenModule"]
     end
 
     subgraph External["Dịch vụ ngoài & DB"]
@@ -31,6 +40,7 @@ flowchart TD
 
     Client <-->|REST API / Bearer Token| Server
     Server <--> PostgreSQL
+    Server <-->|Prisma ORM / TypeORM| PostgreSQL
     Server <--> PayOSGateway
     Server --> Mailer
 ```
@@ -41,6 +51,11 @@ flowchart TD
   - Logic của Diet Deli là **hợp đồng thuê bao (Subscription) + trừ hạn ngạch bữa ăn (`remaining_meals`) + giao dịch thanh toán**.
   - PostgreSQL hỗ trợ **Transaction ACID (`BEGIN ... COMMIT`)** và **Foreign Keys**, đảm bảo khi khách đổi món hoặc thanh toán sẽ không bao giờ bị lệch dữ liệu số bữa.
   - Cấu trúc rất tương đồng với MySQL trong `dietdelivn`, giúp hai bạn tái sử dụng gần như toàn bộ câu lệnh SQL và logic cũ!
+* **Backend:** **NestJS (TypeScript)**, **PostgreSQL (khuyên dùng Prisma ORM hoặc TypeORM)**, `@payos/node` (Thanh toán tự động VietQR), `class-validator`, `class-transformer`, `passport-jwt`, `moment-timezone`, `nodemailer`.
+* **Vì sao NestJS là lựa chọn hoàn hảo cho team 2 người làm song song?**
+  - **Kiến trúc Module hóa tuyệt đối (`*.module.ts`):** Nhánh A làm `AuthModule`, `PlansModule`, `PaymentModule`. Nhánh B làm `MenuModule`, `OrdersModule`, `KitchenModule`. Hai bạn code trên các thư mục tách rời hoàn toàn, **không bao giờ bị xung đột Git (Merge conflicts)**.
+  - **Dependency Injection (DI) & Type-safe:** Code chuẩn doanh nghiệp, dễ bảo trì, tích hợp sẵn hệ thống Validation DTO tự động bắt lỗi dữ liệu đầu vào.
+  - **Transaction ACID:** Dễ dàng kiểm soát giao dịch thanh toán và cộng trừ hạn mức bữa ăn (`remaining_meals`).
 
 ---
 
@@ -232,14 +247,20 @@ CREATE TABLE meal_orders (
 
 ### Task 0.2: Kết nối PostgreSQL & Khởi tạo Bảng
 * Tạo database `dietdeli` trên PostgreSQL cục bộ (Postgres App/pgAdmin/Docker) hoặc Cloud (Supabase / Neon / Aiven free tier).
+### Task 0.2: Khởi tạo Backend NestJS & Kết nối PostgreSQL
+* Khởi tạo dự án NestJS trong `server/` (sử dụng Nest CLI).
+* Cài đặt kết nối PostgreSQL (khuyên dùng Prisma hoặc TypeORM).
 * Chạy script SQL trên để tạo 6 bảng.
 * Khởi tạo file kết nối DB trong `server/src/config/db.js`.
+* Bật CORS và `ValidationPipe` toàn cục trong `main.ts`.
 
 ---
 
 ## IV. SPRINT 1: PHÁT TRIỂN LUỒNG CỐT LÕI (3 - 5 NGÀY) - TÁCH 2 NHÁNH
+## IV. SPRINT 1: PHÁT TRIỂN LUỒNG CỐT LÕI (3 - 5 NGÀY) - TÁCH 2 NHÁNH MODULE
 
 ### NHÁNH A (DEV 1): ONBOARDING, GÓI ĂN, CHECKOUT & AUTH
+### NHÁNH A (DEV 1): `AuthModule`, `PlansModule`, `SubscriptionModule`
 
 #### Task A1: Authentication & User Profile (Full-stack)
 * **Backend:**
@@ -247,14 +268,25 @@ CREATE TABLE meal_orders (
   - `POST /api/auth/login`: SELECT từ `users`, so sánh bcrypt, ký JWT.
   - `GET /api/user/profile` & `PUT /api/user/profile`: Cập nhật `default_address`, `phone`, `default_shipping_note`.
 * **Frontend:**
+#### Task A1: Authentication & User Profile (`AuthModule`)
+* **NestJS Backend:**
+  - `AuthController`: `@Post('register')`, `@Post('login')`.
+  - `AuthService`: Băm mật khẩu `bcryptjs`, sinh JWT qua `@nestjs/jwt`.
+  - `JwtAuthGuard`: Bảo vệ các route cần đăng nhập.
+  - `UsersService`: Xem và cập nhật `default_address`, `phone`, `default_shipping_note`.
+* **React Frontend:**
   - Trang Login / Register.
   - Zustand Store (`useAuthStore`) lưu Token & User.
 
 #### Task A2: Xem & Chọn Gói Ăn (Plans & Pricing)
 * **Backend:**
   - `GET /api/plans`: `SELECT * FROM plans WHERE is_active = true`.
+#### Task A2: Xem & Chọn Gói Ăn (`PlansModule`)
+* **NestJS Backend:**
+  - `PlansController`: `@Get()` lấy danh sách gói đang active.
   - Seed sẵn 6 gói ăn mẫu vào bảng `plans`.
 * **Frontend:**
+* **React Frontend:**
   - Pricing Cards theo thiết kế của `dietdelivn/views/main/baogia.ejs`.
   - Switch chuyển đổi 1 bữa / 2 bữa mỗi ngày.
 
@@ -265,27 +297,43 @@ CREATE TABLE meal_orders (
     - Sinh `payosOrderCode` duy nhất.
     - INSERT vào `user_subscriptions` với `status = 'PENDING_PAYMENT'`.
 * **Frontend:**
+#### Task A3: Trang Checkout & Tạo Đơn (`SubscriptionModule`)
+* **NestJS Backend:**
+  - `SubscriptionsController`: `@Post('checkout')` với `CreateSubscriptionDto`.
+  - Sinh `payosOrderCode` duy nhất.
+  - INSERT vào `user_subscriptions` với `status = 'PENDING_PAYMENT'`.
+* **React Frontend:**
   - Form Checkout nhập địa chỉ và note giao hàng. Chuyển hướng sang màn hình thanh toán.
 
 ---
 
 ### NHÁNH B (DEV 2): QUẢN LÝ MENU & BỘ MÁY CHỌN MÓN (BOOKING ENGINE)
+### NHÁNH B (DEV 2): `MenuModule`, `OrdersModule`
 
 #### Task B1: Quản trị Menu & Món ăn (Daily Menu System)
 * **Backend:**
   - `GET /api/menu/current-week`: Lấy menu T2-T6 trong tuần kèm thông tin 2 món ăn (`JOIN dishes`).
   - `POST /api/admin/menu`: Admin xếp 2 món ăn cho từng ngày.
+#### Task B1: Quản trị Menu & Món ăn (`MenuModule`)
+* **NestJS Backend:**
+  - `MenuController`: `@Get('current-week')` lấy menu T2-T6 trong tuần kèm thông tin 2 món ăn (`dishes`).
+  - `@Post('admin')`: Admin xếp 2 món ăn cho từng ngày.
   - Seed danh mục món ăn mẫu vào bảng `dishes`.
 * **Frontend:**
+* **React Frontend:**
   - Tabs hiển thị thực đơn từ Thứ 2 đến Thứ 6.
 
 #### Task B2: User Dashboard (Xem Gói & Suất Ăn Còn Lại)
 * **Backend:**
   - `GET /api/subscriptions/my-active`: Lấy gói ăn đang active của user, trả về `remaining_meals`, ngày bắt đầu, ngày kết thúc.
 * **Frontend:**
+* **NestJS Backend:**
+  - `SubscriptionsController`: `@Get('my-active')` lấy gói ăn đang active của user, trả về `remaining_meals`, ngày bắt đầu, ngày kết thúc.
+* **React Frontend:**
   - Banner hiển thị tên gói, tiến độ số bữa còn lại (`remaining_meals / total_meals`).
 
 #### Task B3: Bảng Chọn Món Theo Ngày (Meal Selection Grid)
+#### Task B3: Bảng Chọn Món Theo Ngày (`OrdersModule`)
 * **Quy tắc chọn:**
   - Gói 1 bữa: `dish_1_qty = 1` HOẶC `dish_2_qty = 1`.
   - Gói 2 bữa: `dish_1_qty = 1, dish_2_qty = 1` HOẶC `dish_1_qty = 2` HOẶC `dish_2_qty = 2`.
@@ -294,6 +342,11 @@ CREATE TABLE meal_orders (
     - Dùng **PostgreSQL Transaction (`BEGIN ... COMMIT`)** để vừa INSERT/UPDATE vào `meal_orders`, vừa UPDATE `remaining_meals` trong `user_subscriptions`.
   - `GET /api/meal-orders/my-week`: Lấy danh sách các món user đã chọn trong tuần.
 * **Frontend:**
+* **NestJS Backend:**
+  - `OrdersController`: `@Post('select')` với `SelectMealDto`.
+  - Dùng **Database Transaction** để vừa lưu `meal_orders`, vừa UPDATE `remaining_meals` trong `user_subscriptions`.
+  - `@Get('my-week')`: Lấy danh sách các món user đã chọn trong tuần.
+* **React Frontend:**
   - Grid chọn món từng ngày (Tham khảo UI `dietdelivn/views/user/datmon.ejs`).
 
 ---
@@ -301,12 +354,16 @@ CREATE TABLE meal_orders (
 ## V. SPRINT 2: LOGIC VẬN HÀNH & TỰ ĐỘNG HÓA (3 - 4 NGÀY)
 
 ### NHÁNH A (DEV 1): TỰ ĐỘNG HÓA THANH TOÁN (PAYOS WEBHOOK)
+### NHÁNH A (DEV 1): `PaymentModule` (PAYOS WEBHOOK)
 
 #### Task A4: Tích hợp Cổng thanh toán PayOS
 * **Backend:**
   - Gọi `payOS.createPaymentLink({ orderCode, amount, description, returnUrl, cancelUrl })`.
+* **NestJS Backend:**
+  - `PaymentService`: Gọi `payOS.createPaymentLink(...)`.
   - Trả về mã QR VietQR.
 * **Frontend:**
+* **React Frontend:**
   - Màn hình hiển thị mã QR VietQR để khách quét qua app ngân hàng.
 
 #### Task A5: PayOS Webhook & Kích hoạt Gói tự động
@@ -315,18 +372,28 @@ CREATE TABLE meal_orders (
     - Xác thực webhook: `payOS.verifyPaymentWebhookData(req.body)`.
     - `UPDATE user_subscriptions SET status = 'ACTIVE', payment_status = 'PAID', paid_at = NOW() WHERE payos_order_code = ...`.
   - Gửi email hóa đơn xác nhận qua Nodemailer.
+* **NestJS Backend:**
+  - `PaymentController`: `@Post('payos-webhook')`.
+  - Xác thực webhook: `payOS.verifyPaymentWebhookData(body)`.
+  - Cập nhật subscription thành `ACTIVE`, `paid_at = NOW()`.
+  - Gửi email hóa đơn xác nhận qua Nodemailer Service.
 
 ---
 
 ### NHÁNH B (DEV 2): DEADLINE ENGINE & MÀN HÌNH BẾP/SHIPPER
+### NHÁNH B (DEV 2): DEADLINE ENGINE & `KitchenModule`
 
 #### Task B4: Logic Hạn Chót 12h Trưa & Khung Giờ Đặt Cả Tuần
 * **Backend:**
   - Viết helper `canModifyMeal(targetDate)`:
+* **NestJS Backend:**
+  - Viết `DeadlineService` kiểm tra thời gian:
     - Trong tuần: Hạn chót sửa món cho ngày hôm sau là **12:00 trưa ngày hôm trước**.
     - Cuối tuần: Từ **12:00 trưa Thứ 6 đến 12:00 trưa Chủ Nhật** mở khóa cho cả tuần sau.
   - Chặn tại `POST /api/meal-orders/select` nếu quá deadline.
 * **Frontend:**
+  - Chặn tại `OrdersService.selectMeal()` nếu quá deadline (ném ra `BadRequestException`).
+* **React Frontend:**
   - Hiển thị badge **"Đã khóa đơn"** sau 12h trưa.
   - Countdown thời gian còn lại để chọn món.
 
@@ -336,6 +403,11 @@ CREATE TABLE meal_orders (
     - `SELECT dish_name, SUM(qty) GROUP BY dish_name`: Tổng hợp số suất bếp cần nấu.
     - `SELECT user, phone, address, note, dishes`: Danh sách shipper cần giao.
 * **Frontend:**
+#### Task B5: Màn hình Vận hành Bếp & Shipper (`KitchenModule`)
+* **NestJS Backend:**
+  - `KitchenController`: `@Get('daily-report')`.
+  - Thống kê tổng số lượng từng món cho đầu bếp và danh sách địa chỉ cho shipper.
+* **React Frontend:**
   - Bảng tổng hợp số món cho bếp và bảng danh sách giao hàng cho shipper.
 
 ---
