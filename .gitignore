@@ -1,0 +1,23 @@
+# 1. Thư mục chứa thư viện (BẮT BUỘC BỎ QUA)
+node_modules/
+client/node_modules/
+server/node_modules/
+
+# 2. File chứa mật khẩu, key ngân hàng PayOS, DB URL (KHÔNG ĐƯỢC ĐẨY LÊN GITHUB)
+.env
+.env.local
+*.env
+server/.env
+
+# 3. Thư mục build sản phẩm
+dist/
+build/
+client/dist/
+
+# 4. File rác của hệ điều hành (Mac / Windows)
+.DS_Store
+Thumbs.db
+
+# 5. File log
+*.log
+npm-debug.log*
