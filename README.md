@@ -1,14 +1,35 @@
-# KẾ HOẠCH PHÁT TRIỂN DỰ ÁN DIET DELI (POSTGRESQL + REACT + NODE.JS)
-# KẾ HOẠCH PHÁT TRIỂN DỰ ÁN DIET DELI (POSTGRESQL + REACT + NESTJS)
+# DIET DELI - FOOD SUBSCRIPTION PLATFORM
 
-> **Mục tiêu:** Xây dựng nền tảng đặt suất ăn định kỳ (Food Subscription) với React + Tailwind/shadcn/ui, Node.js REST API, **PostgreSQL (Quan hệ)** và thanh toán tự động VietQR (PayOS).
-> **Phân công:** 2 Lập trình viên Full-stack song song theo từng lát cắt tính năng (Vertical Slices), kế thừa dữ liệu và logic từ `dietdelivn`.
-> **Mục tiêu:** Xây dựng nền tảng đặt suất ăn định kỳ (Food Subscription) với React + Tailwind/shadcn/ui, **NestJS (TypeScript Enterprise Architecture)**, **PostgreSQL (Quan hệ)** và thanh toán tự động VietQR (PayOS).
-> **Phân công:** 2 Lập trình viên Full-stack song song theo từng lát cắt tính năng (Vertical Slices - Modules độc lập), kế thừa dữ liệu và logic từ `dietdelivn`.
+> **Nền tảng đặt suất ăn dinh dưỡng định kỳ (Meal-Prep Subscription)**
+> **Tech Stacks:** React 19 (Vite + Tailwind CSS + shadcn/ui) | NestJS (TypeScript) | PostgreSQL (Prisma ORM) | PayOS (VietQR)
+> **Mô hình phối hợp:** 2 Lập trình viên Full-stack song song theo lát cắt tính năng (Vertical Slices).
 
 ---
 
-## I. TỔNG QUAN HỆ THỐNG & TECH STACK
+## I. HƯỚNG DẪN KHỞI CHẠY DỰ ÁN (QUICKSTART)
+
+### 1. Phía Frontend (`client/`)
+```bash
+cd client
+npm install
+npm run dev
+# Mở trình duyệt tại: http://localhost:5173
+```
+
+### 2. Phía Backend (`server/`)
+Khởi tạo NestJS (nếu chưa có) và cài đặt thư viện:
+```bash
+cd server
+npm install
+# Cấu hình file .env kết nối PostgreSQL và chạy migrate Prisma:
+npx prisma db push
+npm run start:dev
+# API Base URL: http://localhost:3000/api
+```
+
+---
+
+## II. KIẾN TRÚC TỔNG QUAN & PHÂN CHIA MODULE
 
 ```mermaid
 flowchart TD
@@ -19,11 +40,6 @@ flowchart TD
         AdminUI["Admin & Kitchen View"]
     end
 
-    subgraph Server["Backend (Node.js + Express + PostgreSQL)"]
-        AuthAPI["/api/auth (JWT)"]
-        PlanAPI["/api/plans & subscriptions"]
-        OrderAPI["/api/meal-orders (Deadline Engine)"]
-        PayOSWebhook["/api/payment/payos-webhook"]
     subgraph Server["Backend (NestJS Modular Architecture)"]
         AuthMod["AuthModule\n(JWT Guard, Users)"]
         PlanMod["PlansModule & SubscriptionModule"]
@@ -39,379 +55,321 @@ flowchart TD
     end
 
     Client <-->|REST API / Bearer Token| Server
-    Server <--> PostgreSQL
-    Server <-->|Prisma ORM / TypeORM| PostgreSQL
+    Server <-->|Prisma ORM| PostgreSQL
     Server <--> PayOSGateway
     Server --> Mailer
 ```
 
-* **Frontend:** React 19, TypeScript, Vite, Tailwind CSS, shadcn/ui, Lucide React, Axios, Zustand.
-* **Backend:** Node.js, Express, **PostgreSQL (`pg` hoặc Prisma ORM)**, `@payos/node` (Thanh toán tự động VietQR), `bcryptjs`, `jsonwebtoken`, `moment-timezone`, `nodemailer`.
-* **Ưu thế của PostgreSQL so với MongoDB trong dự án này:**
-  - Logic của Diet Deli là **hợp đồng thuê bao (Subscription) + trừ hạn ngạch bữa ăn (`remaining_meals`) + giao dịch thanh toán**.
-  - PostgreSQL hỗ trợ **Transaction ACID (`BEGIN ... COMMIT`)** và **Foreign Keys**, đảm bảo khi khách đổi món hoặc thanh toán sẽ không bao giờ bị lệch dữ liệu số bữa.
-  - Cấu trúc rất tương đồng với MySQL trong `dietdelivn`, giúp hai bạn tái sử dụng gần như toàn bộ câu lệnh SQL và logic cũ!
-* **Backend:** **NestJS (TypeScript)**, **PostgreSQL (khuyên dùng Prisma ORM hoặc TypeORM)**, `@payos/node` (Thanh toán tự động VietQR), `class-validator`, `class-transformer`, `passport-jwt`, `moment-timezone`, `nodemailer`.
-* **Vì sao NestJS là lựa chọn hoàn hảo cho team 2 người làm song song?**
-  - **Kiến trúc Module hóa tuyệt đối (`*.module.ts`):** Nhánh A làm `AuthModule`, `PlansModule`, `PaymentModule`. Nhánh B làm `MenuModule`, `OrdersModule`, `KitchenModule`. Hai bạn code trên các thư mục tách rời hoàn toàn, **không bao giờ bị xung đột Git (Merge conflicts)**.
-  - **Dependency Injection (DI) & Type-safe:** Code chuẩn doanh nghiệp, dễ bảo trì, tích hợp sẵn hệ thống Validation DTO tự động bắt lỗi dữ liệu đầu vào.
-  - **Transaction ACID:** Dễ dàng kiểm soát giao dịch thanh toán và cộng trừ hạn mức bữa ăn (`remaining_meals`).
-
 ---
 
-## II. THIẾT KẾ CƠ SỞ DỮ LIỆU POSTGRESQL (SCHEMA DDL)
-
-Dưới đây là thiết kế chuẩn 6 bảng quan hệ cho PostgreSQL:
+## III. THIẾT KẾ DATABASE (PRISMA SCHEMA & POSTGRESQL)
 
 ```mermaid
 erDiagram
-    users ||--o{ user_subscriptions : "sở hữu"
-    plans ||--o{ user_subscriptions : "định nghĩa"
-    user_subscriptions ||--o{ meal_orders : "sinh ra"
-    daily_menus ||--o{ dishes : "chứa 2 món"
-    meal_orders }o--|| dishes : "chọn"
+    User ||--o{ UserSubscription : "sở hữu"
+    Plan ||--o{ UserSubscription : "định nghĩa"
+    UserSubscription ||--o{ MealOrder : "sinh ra"
+    DailyMenu ||--o{ Dish : "chứa 2 món"
+    MealOrder }o--|| Dish : "chọn"
 
-    users {
-        SERIAL id PK
-        VARCHAR full_name
-        VARCHAR email UK
-        VARCHAR phone
-        VARCHAR password
-        VARCHAR role "CUSTOMER | ADMIN | KITCHEN"
-        TEXT default_address
-        TEXT default_shipping_note
+    User {
+        Int id PK
+        String email UK
+        String fullName
+        String phone
+        String password
+        String role "CUSTOMER | ADMIN | KITCHEN"
+        String defaultAddress
+        String defaultShippingNote
     }
 
-    plans {
-        SERIAL id PK
-        VARCHAR name
-        VARCHAR duration_type "DAILY | WEEKLY | MONTHLY"
-        INT total_days "1, 5, hoặc 20"
-        INT meals_per_day "1 hoặc 2"
-        INT price
-        BOOLEAN is_active
+    Plan {
+        Int id PK
+        String name "Gói Tuần - 2 Bữa"
+        String durationType "DAILY | WEEKLY | MONTHLY"
+        Int totalDays "1, 5, hoặc 20"
+        Int mealsPerDay "1 hoặc 2"
+        Int price
+        Boolean isActive
     }
 
-    dishes {
-        SERIAL id PK
-        VARCHAR name
-        INT calories
-        INT protein
-        INT carbs
-        INT fat
-        TEXT image_url
-        BOOLEAN is_active
+    Dish {
+        Int id PK
+        String name
+        Int calories
+        Int protein
+        Int carbs
+        Int fat
+        String imageUrl
+        Boolean isActive
     }
 
-    daily_menus {
-        SERIAL id PK
-        DATE menu_date UK "Ngày ăn (T2-T6)"
-        INT day_of_week "1 (T2) đến 5 (T6)"
-        INT dish_1_id FK
-        INT dish_2_id FK
+    DailyMenu {
+        Int id PK
+        DateTime menuDate UK "Ngày ăn (T2-T6)"
+        Int dayOfWeek "1 (T2) -> 5 (T6)"
+        Int dish1Id FK
+        Int dish2Id FK
     }
 
-    user_subscriptions {
-        SERIAL id PK
-        INT user_id FK
-        INT plan_id FK
-        JSONB plan_snapshot
-        DATE start_date
-        DATE end_date
-        INT total_meals
-        INT remaining_meals "Số bữa còn lại"
-        VARCHAR status "PENDING_PAYMENT | ACTIVE | COMPLETED | CANCELLED"
-        VARCHAR payment_status "UNPAID | PAID"
-        BIGINT payos_order_code UK
-        TEXT shipping_address
-        TEXT shipping_note
+    UserSubscription {
+        Int id PK
+        Int userId FK
+        Int planId FK
+        Json planSnapshot
+        DateTime startDate
+        DateTime endDate
+        Int totalMeals
+        Int remainingMeals "Số suất ăn còn lại"
+        String status "PENDING_PAYMENT | ACTIVE | COMPLETED"
+        String paymentStatus "UNPAID | PAID"
+        BigInt payosOrderCode UK
+        String shippingAddress
+        String shippingNote
     }
 
-    meal_orders {
-        SERIAL id PK
-        INT subscription_id FK
-        INT user_id FK
-        DATE meal_date
-        INT dish_1_id FK
-        INT dish_1_qty "0, 1 hoặc 2"
-        INT dish_2_id FK
-        INT dish_2_qty "0, 1 hoặc 2"
-        TEXT shipping_note
-        VARCHAR status "ORDERED | PREPARING | DELIVERED | CANCELED"
+    MealOrder {
+        Int id PK
+        Int subscriptionId FK
+        Int userId FK
+        DateTime mealDate
+        Int dish1Id FK
+        Int dish1Qty "0, 1 hoặc 2"
+        Int dish2Id FK
+        Int dish2Qty "0, 1 hoặc 2"
+        String shippingNote
+        String status "ORDERED | PREPARING | DELIVERED"
     }
 ```
 
-### Script DDL khởi tạo (SQL):
+### File cấu hình Prisma (`server/prisma/schema.prisma`):
 
-```sql
--- 1. BẢNG USERS
-CREATE TABLE users (
-    id SERIAL PRIMARY KEY,
-    full_name VARCHAR(100) NOT NULL,
-    email VARCHAR(100) UNIQUE NOT NULL,
-    phone VARCHAR(20) NOT NULL,
-    password VARCHAR(255) NOT NULL,
-    role VARCHAR(20) DEFAULT 'CUSTOMER', -- 'CUSTOMER', 'ADMIN', 'KITCHEN'
-    default_address TEXT,
-    default_shipping_note TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
+```prisma
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
 
--- 2. BẢNG PLANS (Gói ăn mẫu)
-CREATE TABLE plans (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(100) NOT NULL, -- Ví dụ: "Gói Tuần - 2 Bữa/Ngày"
-    duration_type VARCHAR(20) NOT NULL, -- 'DAILY', 'WEEKLY', 'MONTHLY'
-    total_days INT NOT NULL, -- DAILY: 1, WEEKLY: 5, MONTHLY: 20 (chỉ tính T2-T6)
-    meals_per_day INT NOT NULL CHECK (meals_per_day IN (1, 2)),
-    price INT NOT NULL, -- Giá gói (VND)
-    description TEXT,
-    is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
+generator client {
+  provider = "prisma-client-js"
+}
 
--- 3. BẢNG DISHES (Danh mục món ăn)
-CREATE TABLE dishes (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(150) NOT NULL,
-    calories INT,
-    protein INT,
-    carbs INT,
-    fat INT,
-    image_url TEXT,
-    is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
+enum Role {
+  CUSTOMER
+  ADMIN
+  KITCHEN
+}
 
--- 4. BẢNG DAILY_MENUS (Menu T2-T6, mỗi ngày đúng 2 món)
-CREATE TABLE daily_menus (
-    id SERIAL PRIMARY KEY,
-    menu_date DATE UNIQUE NOT NULL,
-    day_of_week INT NOT NULL CHECK (day_of_week BETWEEN 1 AND 5),
-    dish_1_id INT NOT NULL REFERENCES dishes(id),
-    dish_2_id INT NOT NULL REFERENCES dishes(id),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
+enum DurationType {
+  DAILY
+  WEEKLY
+  MONTHLY
+}
 
--- 5. BẢNG USER_SUBSCRIPTIONS (Hợp đồng gói ăn khách mua)
-CREATE TABLE user_subscriptions (
-    id SERIAL PRIMARY KEY,
-    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    plan_id INT NOT NULL REFERENCES plans(id),
-    plan_snapshot JSONB NOT NULL, -- Lưu cứng { name, duration_type, meals_per_day, price }
-    start_date DATE NOT NULL,
-    end_date DATE NOT NULL,
-    total_meals INT NOT NULL,
-    remaining_meals INT NOT NULL, -- Quota số suất ăn còn lại
-    status VARCHAR(30) DEFAULT 'PENDING_PAYMENT', -- 'PENDING_PAYMENT', 'ACTIVE', 'COMPLETED', 'CANCELLED'
-    payment_status VARCHAR(20) DEFAULT 'UNPAID', -- 'UNPAID', 'PAID'
-    payment_method VARCHAR(20) DEFAULT 'PAYOS',
-    payos_order_code BIGINT UNIQUE, -- Mã đơn PayOS
-    paid_at TIMESTAMP WITH TIME ZONE,
-    recipient_name VARCHAR(100) NOT NULL,
-    shipping_phone VARCHAR(20) NOT NULL,
-    shipping_address TEXT NOT NULL,
-    shipping_note TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
+enum SubStatus {
+  PENDING_PAYMENT
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
 
--- 6. BẢNG MEAL_ORDERS (Lựa chọn món từng ngày của khách)
-CREATE TABLE meal_orders (
-    id SERIAL PRIMARY KEY,
-    subscription_id INT NOT NULL REFERENCES user_subscriptions(id) ON DELETE CASCADE,
-    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    meal_date DATE NOT NULL,
-    dish_1_id INT REFERENCES dishes(id),
-    dish_1_qty INT DEFAULT 0,
-    dish_2_id INT REFERENCES dishes(id),
-    dish_2_qty INT DEFAULT 0,
-    shipping_note TEXT,
-    status VARCHAR(30) DEFAULT 'ORDERED', -- 'ORDERED', 'PREPARING', 'DELIVERED', 'CANCELED'
-    locked_at TIMESTAMP WITH TIME ZONE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT unique_sub_meal_date UNIQUE (subscription_id, meal_date),
-    CONSTRAINT check_total_qty CHECK (dish_1_qty + dish_2_qty <= 2)
-);
+enum PayStatus {
+  UNPAID
+  PAID
+  REFUNDED
+}
+
+enum OrderStatus {
+  ORDERED
+  PREPARING
+  DELIVERED
+  CANCELED
+}
+
+model User {
+  id                  Int                @id @default(autoincrement())
+  fullName            String             @map("full_name")
+  email               String             @unique
+  phone               String
+  password            String
+  role                Role               @default(CUSTOMER)
+  defaultAddress      String?            @map("default_address")
+  defaultShippingNote String?            @map("default_shipping_note")
+  subscriptions       UserSubscription[]
+  mealOrders          MealOrder[]
+  createdAt           DateTime           @default(now()) @map("created_at")
+  updatedAt           DateTime           @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+model Plan {
+  id            Int                @id @default(autoincrement())
+  name          String
+  durationType  DurationType       @map("duration_type")
+  totalDays     Int                @map("total_days")
+  mealsPerDay   Int                @map("meals_per_day")
+  price         Int
+  description   String?
+  isActive      Boolean            @default(true) @map("is_active")
+  subscriptions UserSubscription[]
+  createdAt     DateTime           @default(now()) @map("created_at")
+
+  @@map("plans")
+}
+
+model Dish {
+  id           Int         @id @default(autoincrement())
+  name         String
+  calories     Int?
+  protein      Int?
+  carbs        Int?
+  fat          Int?
+  imageUrl     String?     @map("image_url")
+  isActive     Boolean     @default(true) @map("is_active")
+  menuDish1    DailyMenu[] @relation("MenuDish1")
+  menuDish2    DailyMenu[] @relation("MenuDish2")
+  orderDish1   MealOrder[] @relation("OrderDish1")
+  orderDish2   MealOrder[] @relation("OrderDish2")
+  createdAt    DateTime    @default(now()) @map("created_at")
+
+  @@map("dishes")
+}
+
+model DailyMenu {
+  id        Int      @id @default(autoincrement())
+  menuDate  DateTime @unique @map("menu_date") @db.Date
+  dayOfWeek Int      @map("day_of_week")
+  dish1Id   Int      @map("dish_1_id")
+  dish2Id   Int      @map("dish_2_id")
+  dish1     Dish     @relation("MenuDish1", fields: [dish1Id], references: [id])
+  dish2     Dish     @relation("MenuDish2", fields: [dish2Id], references: [id])
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("daily_menus")
+}
+
+model UserSubscription {
+  id              Int         @id @default(autoincrement())
+  userId          Int         @map("user_id")
+  planId          Int         @map("plan_id")
+  planSnapshot    Json        @map("plan_snapshot")
+  startDate       DateTime    @map("start_date") @db.Date
+  endDate         DateTime    @map("end_date") @db.Date
+  totalMeals      Int         @map("total_meals")
+  remainingMeals  Int         @map("remaining_meals")
+  status          SubStatus   @default(PENDING_PAYMENT)
+  paymentStatus   PayStatus   @default(UNPAID) @map("payment_status")
+  paymentMethod   String      @default("PAYOS") @map("payment_method")
+  payosOrderCode  BigInt?     @unique @map("payos_order_code")
+  paidAt          DateTime?   @map("paid_at")
+  recipientName   String      @map("recipient_name")
+  shippingPhone   String      @map("shipping_phone")
+  shippingAddress String      @map("shipping_address")
+  shippingNote    String?     @map("shipping_note")
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan            Plan        @relation(fields: [planId], references: [id])
+  mealOrders      MealOrder[]
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+
+  @@map("user_subscriptions")
+}
+
+model MealOrder {
+  id             Int              @id @default(autoincrement())
+  subscriptionId Int              @map("subscription_id")
+  userId         Int              @map("user_id")
+  mealDate       DateTime         @map("meal_date") @db.Date
+  dish1Id        Int?             @map("dish_1_id")
+  dish1Qty       Int              @default(0) @map("dish_1_qty")
+  dish2Id        Int?             @map("dish_2_id")
+  dish2Qty       Int              @default(0) @map("dish_2_qty")
+  shippingNote   String?          @map("shipping_note")
+  status         OrderStatus      @default(ORDERED)
+  lockedAt       DateTime?        @map("locked_at")
+  subscription   UserSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dish1          Dish?            @relation("OrderDish1", fields: [dish1Id], references: [id])
+  dish2          Dish?            @relation("OrderDish2", fields: [dish2Id], references: [id])
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
+
+  @@unique([subscriptionId, mealDate])
+  @@map("meal_orders")
+}
 ```
 
 ---
 
-## III. SPRINT 0: CHUẨN BỊ NỀN TẢNG (1 - 2 NGÀY) - CẢ 2 CÙNG LÀM
+## IV. LỘ TRÌNH TRIỂN KHAI THEO SPRINT (VERTICAL SLICES)
 
-### Task 0.1: Cấu trúc thư mục & Frontend Setup
-* Cài đặt Tailwind CSS & cấu hình `dietdeli-2/client`.
-* Thư mục `dietdeli-2/client/public/images` đã sẵn sàng 106 ảnh món ăn & banner từ bản cũ.
-
-### Task 0.2: Kết nối PostgreSQL & Khởi tạo Bảng
-* Tạo database `dietdeli` trên PostgreSQL cục bộ (Postgres App/pgAdmin/Docker) hoặc Cloud (Supabase / Neon / Aiven free tier).
-### Task 0.2: Khởi tạo Backend NestJS & Kết nối PostgreSQL
-* Khởi tạo dự án NestJS trong `server/` (sử dụng Nest CLI).
-* Cài đặt kết nối PostgreSQL (khuyên dùng Prisma hoặc TypeORM).
-* Chạy script SQL trên để tạo 6 bảng.
-* Khởi tạo file kết nối DB trong `server/src/config/db.js`.
-* Bật CORS và `ValidationPipe` toàn cục trong `main.ts`.
+### SPRINT 0: NỀN TẢNG (1 - 2 NGÀY) - CẢ 2 CÙNG LÀM
+* **Frontend:**
+  - Chuẩn hóa `client/` với Vite + Tailwind CSS + shadcn/ui.
+  - Tận dụng kho 106 ảnh món ăn và banner có sẵn tại `client/public/images/`.
+* **Backend:**
+  - Khởi tạo NestJS bằng Nest CLI, cài đặt Prisma & tạo kết nối tới PostgreSQL.
+  - Chạy `npx prisma db push` để sinh toàn bộ bảng.
+  - Cấu hình `src/main.ts` bật CORS (`http://localhost:5173`), global prefix `/api`, và `ValidationPipe`.
 
 ---
 
-## IV. SPRINT 1: PHÁT TRIỂN LUỒNG CỐT LÕI (3 - 5 NGÀY) - TÁCH 2 NHÁNH
-## IV. SPRINT 1: PHÁT TRIỂN LUỒNG CỐT LÕI (3 - 5 NGÀY) - TÁCH 2 NHÁNH MODULE
+### SPRINT 1: LUỒNG CỐT LÕI (3 - 5 NGÀY) - TÁCH 2 NHÁNH
 
-### NHÁNH A (DEV 1): ONBOARDING, GÓI ĂN, CHECKOUT & AUTH
-### NHÁNH A (DEV 1): `AuthModule`, `PlansModule`, `SubscriptionModule`
+#### NHÁNH A (DEV 1): `AuthModule`, `PlansModule`, `SubscriptionModule`
+* **Backend NestJS:**
+  - `AuthModule`: Đăng ký, đăng nhập JWT (`@nestjs/jwt`), băm mật khẩu (`bcryptjs`), `JwtAuthGuard`.
+  - `PlansModule`: API lấy danh sách các gói ăn (`GET /api/plans`). Seed 6 gói mẫu vào DB.
+  - `SubscriptionModule`: API tạo đơn mua gói (`POST /api/subscriptions/checkout`), sinh `payosOrderCode`, lưu vào `user_subscriptions`.
+* **Frontend React:**
+  - Trang Login / Register + Zustand Store (`useAuthStore`).
+  - Trang Giới thiệu & Bảng giá gói ăn (tham khảo UI `dietdelivn/views/main/baogia.ejs`).
+  - Trang Checkout: Form nhập địa chỉ và ghi chú giao hàng.
 
-#### Task A1: Authentication & User Profile (Full-stack)
-* **Backend:**
-  - `POST /api/auth/register`: INSERT vào `users`, băm mật khẩu `bcryptjs`.
-  - `POST /api/auth/login`: SELECT từ `users`, so sánh bcrypt, ký JWT.
-  - `GET /api/user/profile` & `PUT /api/user/profile`: Cập nhật `default_address`, `phone`, `default_shipping_note`.
-* **Frontend:**
-#### Task A1: Authentication & User Profile (`AuthModule`)
-* **NestJS Backend:**
-  - `AuthController`: `@Post('register')`, `@Post('login')`.
-  - `AuthService`: Băm mật khẩu `bcryptjs`, sinh JWT qua `@nestjs/jwt`.
-  - `JwtAuthGuard`: Bảo vệ các route cần đăng nhập.
-  - `UsersService`: Xem và cập nhật `default_address`, `phone`, `default_shipping_note`.
-* **React Frontend:**
-  - Trang Login / Register.
-  - Zustand Store (`useAuthStore`) lưu Token & User.
-
-#### Task A2: Xem & Chọn Gói Ăn (Plans & Pricing)
-* **Backend:**
-  - `GET /api/plans`: `SELECT * FROM plans WHERE is_active = true`.
-#### Task A2: Xem & Chọn Gói Ăn (`PlansModule`)
-* **NestJS Backend:**
-  - `PlansController`: `@Get()` lấy danh sách gói đang active.
-  - Seed sẵn 6 gói ăn mẫu vào bảng `plans`.
-* **Frontend:**
-* **React Frontend:**
-  - Pricing Cards theo thiết kế của `dietdelivn/views/main/baogia.ejs`.
-  - Switch chuyển đổi 1 bữa / 2 bữa mỗi ngày.
-
-#### Task A3: Trang Checkout & Tạo Đơn Chờ Thanh Toán
-* **Backend:**
-  - `POST /api/subscriptions/checkout`: 
-    - Nhận `planId`, `startDate`, `shippingAddress`, `shippingNote`.
-    - Sinh `payosOrderCode` duy nhất.
-    - INSERT vào `user_subscriptions` với `status = 'PENDING_PAYMENT'`.
-* **Frontend:**
-#### Task A3: Trang Checkout & Tạo Đơn (`SubscriptionModule`)
-* **NestJS Backend:**
-  - `SubscriptionsController`: `@Post('checkout')` với `CreateSubscriptionDto`.
-  - Sinh `payosOrderCode` duy nhất.
-  - INSERT vào `user_subscriptions` với `status = 'PENDING_PAYMENT'`.
-* **React Frontend:**
-  - Form Checkout nhập địa chỉ và note giao hàng. Chuyển hướng sang màn hình thanh toán.
+#### NHÁNH B (DEV 2): `MenuModule`, `OrdersModule`
+* **Backend NestJS:**
+  - `MenuModule`: API lấy thực đơn tuần (`GET /api/menu/current-week`), API admin gán 2 món cho mỗi ngày.
+  - `OrdersModule`: API lưu lựa chọn món (`POST /api/meal-orders/select`), kiểm tra số lượng khớp với gói (1 bữa hoặc 2 bữa/ngày).
+  - API lấy lịch ăn của khách (`GET /api/meal-orders/my-week`).
+* **Frontend React:**
+  - User Dashboard: Hiển thị gói đang kích hoạt, tiến độ số bữa còn lại (`remaining_meals`).
+  - Grid Lịch chọn món T2-T6 trực quan (tham khảo UI `dietdelivn/views/user/datmon.ejs`).
 
 ---
 
-### NHÁNH B (DEV 2): QUẢN LÝ MENU & BỘ MÁY CHỌN MÓN (BOOKING ENGINE)
-### NHÁNH B (DEV 2): `MenuModule`, `OrdersModule`
+### SPRINT 2: VẬN HÀNH & TỰ ĐỘNG HÓA (3 - 4 NGÀY)
 
-#### Task B1: Quản trị Menu & Món ăn (Daily Menu System)
-* **Backend:**
-  - `GET /api/menu/current-week`: Lấy menu T2-T6 trong tuần kèm thông tin 2 món ăn (`JOIN dishes`).
-  - `POST /api/admin/menu`: Admin xếp 2 món ăn cho từng ngày.
-#### Task B1: Quản trị Menu & Món ăn (`MenuModule`)
-* **NestJS Backend:**
-  - `MenuController`: `@Get('current-week')` lấy menu T2-T6 trong tuần kèm thông tin 2 món ăn (`dishes`).
-  - `@Post('admin')`: Admin xếp 2 món ăn cho từng ngày.
-  - Seed danh mục món ăn mẫu vào bảng `dishes`.
-* **Frontend:**
-* **React Frontend:**
-  - Tabs hiển thị thực đơn từ Thứ 2 đến Thứ 6.
+#### NHÁNH A (DEV 1): `PaymentModule` (TỰ ĐỘNG HÓA PAYOS)
+* **Backend NestJS:**
+  - `PaymentModule`: Tạo link thanh toán VietQR qua `@payos/node`.
+  - `POST /api/payment/payos-webhook`: Bắt webhook từ PayOS, xác thực chữ ký bảo mật, tự động cập nhật `user_subscriptions` thành `ACTIVE`.
+  - Gửi email hóa đơn xác nhận thành công qua `nodemailer`.
+* **Frontend React:**
+  - Màn hình hiển thị mã QR VietQR PayOS để khách quét bằng ứng dụng ngân hàng.
 
-#### Task B2: User Dashboard (Xem Gói & Suất Ăn Còn Lại)
-* **Backend:**
-  - `GET /api/subscriptions/my-active`: Lấy gói ăn đang active của user, trả về `remaining_meals`, ngày bắt đầu, ngày kết thúc.
-* **Frontend:**
-* **NestJS Backend:**
-  - `SubscriptionsController`: `@Get('my-active')` lấy gói ăn đang active của user, trả về `remaining_meals`, ngày bắt đầu, ngày kết thúc.
-* **React Frontend:**
-  - Banner hiển thị tên gói, tiến độ số bữa còn lại (`remaining_meals / total_meals`).
-
-#### Task B3: Bảng Chọn Món Theo Ngày (Meal Selection Grid)
-#### Task B3: Bảng Chọn Món Theo Ngày (`OrdersModule`)
-* **Quy tắc chọn:**
-  - Gói 1 bữa: `dish_1_qty = 1` HOẶC `dish_2_qty = 1`.
-  - Gói 2 bữa: `dish_1_qty = 1, dish_2_qty = 1` HOẶC `dish_1_qty = 2` HOẶC `dish_2_qty = 2`.
-* **Backend:**
-  - `POST /api/meal-orders/select`:
-    - Dùng **PostgreSQL Transaction (`BEGIN ... COMMIT`)** để vừa INSERT/UPDATE vào `meal_orders`, vừa UPDATE `remaining_meals` trong `user_subscriptions`.
-  - `GET /api/meal-orders/my-week`: Lấy danh sách các món user đã chọn trong tuần.
-* **Frontend:**
-* **NestJS Backend:**
-  - `OrdersController`: `@Post('select')` với `SelectMealDto`.
-  - Dùng **Database Transaction** để vừa lưu `meal_orders`, vừa UPDATE `remaining_meals` trong `user_subscriptions`.
-  - `@Get('my-week')`: Lấy danh sách các món user đã chọn trong tuần.
-* **React Frontend:**
-  - Grid chọn món từng ngày (Tham khảo UI `dietdelivn/views/user/datmon.ejs`).
+#### NHÁNH B (DEV 2): DEADLINE ENGINE & `KitchenModule`
+* **Backend NestJS:**
+  - `DeadlineService`: 
+    - Khóa sửa món sau **12:00 trưa ngày hôm trước**.
+    - Cửa sổ mở đặt cho cả tuần: Từ **12:00 trưa Thứ 6 đến 12:00 trưa Chủ Nhật**.
+  - `KitchenModule`: API thống kê số lượng từng món cần nấu và danh sách giao hàng cho shipper (`GET /api/kitchen/daily-report?date=YYYY-MM-DD`).
+* **Frontend React:**
+  - Badge "Đã khóa đơn" & Countdown thời gian còn lại trước 12h trưa.
+  - Giao diện Admin/Bếp: Xem tổng số đĩa cần nấu và danh sách địa chỉ giao hàng.
 
 ---
 
-## V. SPRINT 2: LOGIC VẬN HÀNH & TỰ ĐỘNG HÓA (3 - 4 NGÀY)
-
-### NHÁNH A (DEV 1): TỰ ĐỘNG HÓA THANH TOÁN (PAYOS WEBHOOK)
-### NHÁNH A (DEV 1): `PaymentModule` (PAYOS WEBHOOK)
-
-#### Task A4: Tích hợp Cổng thanh toán PayOS
-* **Backend:**
-  - Gọi `payOS.createPaymentLink({ orderCode, amount, description, returnUrl, cancelUrl })`.
-* **NestJS Backend:**
-  - `PaymentService`: Gọi `payOS.createPaymentLink(...)`.
-  - Trả về mã QR VietQR.
-* **Frontend:**
-* **React Frontend:**
-  - Màn hình hiển thị mã QR VietQR để khách quét qua app ngân hàng.
-
-#### Task A5: PayOS Webhook & Kích hoạt Gói tự động
-* **Backend:**
-  - Endpoint `POST /api/payment/payos-webhook`:
-    - Xác thực webhook: `payOS.verifyPaymentWebhookData(req.body)`.
-    - `UPDATE user_subscriptions SET status = 'ACTIVE', payment_status = 'PAID', paid_at = NOW() WHERE payos_order_code = ...`.
-  - Gửi email hóa đơn xác nhận qua Nodemailer.
-* **NestJS Backend:**
-  - `PaymentController`: `@Post('payos-webhook')`.
-  - Xác thực webhook: `payOS.verifyPaymentWebhookData(body)`.
-  - Cập nhật subscription thành `ACTIVE`, `paid_at = NOW()`.
-  - Gửi email hóa đơn xác nhận qua Nodemailer Service.
+### SPRINT 3: TỔNG DUYỆT & DEPLOY (2 - 3 NGÀY)
+* Ghép nối E2E toàn bộ hệ thống từ mua gói -> thanh toán QR -> webhook kích hoạt -> đặt món -> khóa đơn sau 12h -> bếp xuất danh sách.
+* Deploy: Frontend (Vercel), Backend (Render / Railway), PostgreSQL (Supabase / Neon / Render).
 
 ---
 
-### NHÁNH B (DEV 2): DEADLINE ENGINE & MÀN HÌNH BẾP/SHIPPER
-### NHÁNH B (DEV 2): DEADLINE ENGINE & `KitchenModule`
+## V. QUY TẮC GIT & PHỐI HỢP NHÓM
 
-#### Task B4: Logic Hạn Chót 12h Trưa & Khung Giờ Đặt Cả Tuần
-* **Backend:**
-  - Viết helper `canModifyMeal(targetDate)`:
-* **NestJS Backend:**
-  - Viết `DeadlineService` kiểm tra thời gian:
-    - Trong tuần: Hạn chót sửa món cho ngày hôm sau là **12:00 trưa ngày hôm trước**.
-    - Cuối tuần: Từ **12:00 trưa Thứ 6 đến 12:00 trưa Chủ Nhật** mở khóa cho cả tuần sau.
-  - Chặn tại `POST /api/meal-orders/select` nếu quá deadline.
-* **Frontend:**
-  - Chặn tại `OrdersService.selectMeal()` nếu quá deadline (ném ra `BadRequestException`).
-* **React Frontend:**
-  - Hiển thị badge **"Đã khóa đơn"** sau 12h trưa.
-  - Countdown thời gian còn lại để chọn món.
-
-#### Task B5: Màn hình Vận hành Bếp & Shipper (Kitchen/Dispatch Dashboard)
-* **Backend:**
-  - `GET /api/kitchen/daily-report?date=YYYY-MM-DD`:
-    - `SELECT dish_name, SUM(qty) GROUP BY dish_name`: Tổng hợp số suất bếp cần nấu.
-    - `SELECT user, phone, address, note, dishes`: Danh sách shipper cần giao.
-* **Frontend:**
-#### Task B5: Màn hình Vận hành Bếp & Shipper (`KitchenModule`)
-* **NestJS Backend:**
-  - `KitchenController`: `@Get('daily-report')`.
-  - Thống kê tổng số lượng từng món cho đầu bếp và danh sách địa chỉ cho shipper.
-* **React Frontend:**
-  - Bảng tổng hợp số món cho bếp và bảng danh sách giao hàng cho shipper.
-
----
-
-## VI. SPRINT 3: TỔNG DUYỆT & DEPLOY (2 - 3 NGÀY)
-* Ghép nối E2E: Đăng ký -> Mua gói -> Quét QR PayOS -> Webhook kích hoạt -> Đặt món -> Khóa đơn sau 12h -> Bếp xuất danh sách.
-* Deploy: Frontend (Vercel), Backend (Render/Railway), Database (Supabase / Neon / Render PostgreSQL).
+1. **File `.gitignore`:** Đã cấu hình bỏ qua `node_modules/`, `.env`, `dist/`. Tuyệt đối không commit các file này.
+2. **Quy tắc phân nhánh:**
+   - Dev 1: làm trên branch `feature/track-a`
+   - Dev 2: làm trên branch `feature/track-b`
+3. **Merge hàng ngày:** Cuối mỗi ngày họp nhanh và merge code vào `main` để kiểm tra tích hợp.
