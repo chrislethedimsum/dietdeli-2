@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import bcrypt from 'bcryptjs';
-import { db } from '../../prisma/db.js';
+import { db } from '../prisma/db.js';
 import { RegisterDto } from './dto/register.dto.js';
 import { LoginDto } from './dto/login.dto.js';
 
@@ -11,10 +11,10 @@ export class AuthService {
 
   // 1. ĐĂNG KÝ
   async register(dto: RegisterDto) {
-    // Kiểm tra email đã tồn tại chưa
-    const existingUser = await db.User.findUnique({
-      where: { email: dto.email },
-    });
+    // Tìm user bằng: db.orm.public.User.where(...).first()
+    const existingUser = await db.orm.public.User
+      .where({ email: dto.email })
+      .first();
 
     if (existingUser) {
       throw new BadRequestException('Email này đã được sử dụng');
@@ -24,18 +24,15 @@ export class AuthService {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(dto.password, salt);
 
-    // Tạo user mới trong Database
-    const newUser = await db.User.create({
-      data: {
-        name: dto.name,
-        email: dto.email,
-        password: hashedPassword,
-        phone: dto.phone,
-        address: dto.address || null,
-      },
+    // Tạo user bằng: db.orm.public.User.create(...)
+    const newUser = await db.orm.public.User.create({
+      name: dto.name,
+      email: dto.email,
+      password: hashedPassword,
+      phone: dto.phone,
+      address: dto.address || null,
     });
 
-    // Trả về thông tin user (loại bỏ trường password vì lý do bảo mật)
     const { password, ...result } = newUser;
     return {
       message: 'Đăng ký tài khoản thành công',
@@ -46,9 +43,9 @@ export class AuthService {
   // 2. ĐĂNG NHẬP
   async login(dto: LoginDto) {
     // Tìm user theo email
-    const user = await db.User.findUnique({
-      where: { email: dto.email },
-    });
+    const user = await db.orm.public.User
+      .where({ email: dto.email })
+      .first();
 
     if (!user) {
       throw new UnauthorizedException('Email hoặc mật khẩu không chính xác');
@@ -60,7 +57,7 @@ export class AuthService {
       throw new UnauthorizedException('Email hoặc mật khẩu không chính xác');
     }
 
-    // Tạo payload và sinh JWT Token
+    // Sinh JWT Token
     const payload = { sub: user.id, email: user.email, name: user.name };
     const accessToken = this.jwtService.sign(payload);
 
