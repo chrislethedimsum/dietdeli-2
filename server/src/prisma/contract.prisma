@@ -1,0 +1,156 @@
+// use prisma-8
+
+model Dish {
+  id             Int      @id @default(autoincrement())
+  name_vi        String
+  name_en        String
+  description_vi String?
+  description_en String?
+  image          String?
+  created_at     DateTime @default(now())
+  updated_at     temporal.updatedAt()
+
+  menus       Menu[]
+  order_items Order_Item[]
+
+  @@map("dish")
+}
+
+model Day {
+  id          Int      @id @default(autoincrement())
+  date        String
+  day_of_week Int
+  created_at  DateTime @default(now())
+  updated_at  temporal.updatedAt()
+
+  menus Menu[]
+
+  @@map("day")
+}
+
+model Menu {
+  id         Int      @id @default(autoincrement())
+  dish_id    Int
+  id_day     Int
+  created_at DateTime @default(now())
+  updated_at temporal.updatedAt()
+
+  dish Dish @relation(fields: [dish_id], references: [id], onDelete: Cascade)
+  day  Day  @relation(fields: [id_day], references: [id], onDelete: Cascade)
+
+  @@map("menu")
+}
+
+model Meal_package {
+  id                Int      @id @default(autoincrement())
+  name              String
+  calories_per_meal Int
+  duration_days     Int
+  price             Int
+  total_meals       Int
+  isActive          Boolean  @default(true)
+  created_at        DateTime @default(now())
+  updated_at        temporal.updatedAt()
+
+  orders             Order[]
+  user_subscriptions User_subscription[]
+
+  @@map("meal_package")
+}
+
+model User {
+  id             Int      @id @default(autoincrement())
+  name           String
+  email          String   @unique
+  password       String
+  phone          String
+  dob            DateTime?
+  address        String?
+  gender         String?
+  height         Int?
+  weight         Int?
+  goal           String?
+  activity_level String?
+  created_at     DateTime @default(now())
+  updated_at     temporal.updatedAt()
+
+  orders             Order[]
+  user_subscriptions User_subscription[]
+
+  @@map("user")
+}
+
+model User_subscription {
+  id              Int      @id @default(autoincrement())
+  id_user         Int
+  package_id      Int
+  start_date      DateTime
+  end_date        DateTime
+  payment_status  String   @default("UNPAID")
+  remaining_meals Int
+  created_at      DateTime @default(now())
+  updated_at      temporal.updatedAt()
+
+  user    User         @relation(fields: [id_user], references: [id], onDelete: Cascade)
+  package Meal_package @relation(fields: [package_id], references: [id], onDelete: Restrict)
+  orders  Order[]
+
+  @@map("user_subscription")
+}
+
+model Order {
+  id                   Int      @id @default(autoincrement())
+  user_subscription_id Int
+  user_id              Int
+  package_id           Int
+  shipping_address     String
+  shipping_note        String?
+  status               String   @default("ORDER")
+  created_at           DateTime @default(now())
+  updated_at           temporal.updatedAt()
+
+  user_subscription User_subscription @relation(
+    fields: [user_subscription_id],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  user User @relation(
+    fields: [user_id],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  package Meal_package @relation(
+    fields: [package_id],
+    references: [id],
+    onDelete: Restrict
+  )
+
+  order_items Order_Item[]
+
+  @@map("order")
+}
+
+model Order_Item {
+  id         Int      @id @default(autoincrement())
+  order_id   Int
+  dish_id    Int
+  quantity   Int
+  created_at DateTime @default(now())
+  updated_at temporal.updatedAt()
+
+  order Order @relation(
+    fields: [order_id],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  dish Dish @relation(
+    fields: [dish_id],
+    references: [id],
+    onDelete: Restrict
+  )
+
+  @@map("order_item")
+}
