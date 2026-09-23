@@ -12,11 +12,16 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
+  // src/auth/strategies/jwt.strategy.ts
   async validate(payload: { sub: number; email: string; name: string }) {
-    // Giá trị trả về ở đây sẽ được tự động gán vào req.user
     if (!payload.sub) {
       throw new UnauthorizedException('Token không hợp lệ');
     }
-    return { userId: payload.sub, email: payload.email, name: payload.name };
+    return { 
+      id: payload.sub,       // 👈 Chuẩn hóa thành id
+      userId: payload.sub,   // Dự phòng nếu có code cũ dùng userId
+      email: payload.email, 
+      name: payload.name 
+    };
   }
 }

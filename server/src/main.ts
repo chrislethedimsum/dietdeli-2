@@ -1,11 +1,10 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
-import { AppModule, ObserveInstrument } from './app.module.js';
+import { AppModule } from './app.module.js';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {
-    instrument: ObserveInstrument,
-  });
+  // Khởi tạo app thuần túy, không cần instrument của Observe
+  const app = await NestFactory.create(AppModule);
 
   // 1. Thêm tiền tố /api cho toàn bộ routes (http://localhost:3000/api/...)
   app.setGlobalPrefix('api');
