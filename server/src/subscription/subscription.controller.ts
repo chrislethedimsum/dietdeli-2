@@ -1,4 +1,53 @@
-import { Controller } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
+import { SubscriptionService } from './subscription.service.js';
+import { CheckoutSubscriptionDto } from './dto/usersubscription.dto.js';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 
-@Controller('subscription')
-export class SubscriptionController {}
+@Controller('subscriptions')
+export class SubscriptionController {
+  constructor(private readonly subscriptionService: SubscriptionService) {}
+
+  // 👉 1. POST /api/subscriptions/checkout (Khách hàng tạo đơn mua gói)
+  @Post('checkout')
+  @UseGuards(JwtAuthGuard)
+  async checkout(@Req() req: any, @Body() dto: CheckoutSubscriptionDto) {
+    const userId = req.user.id || req.user.userId;
+    return this.subscriptionService.checkout(userId, dto);
+  }
+
+  // 👉 2. PATCH /api/subscriptions/:id/status (Đánh dấu trạng thái thanh toán thủ công)
+  // Ví dụ: body { "status": "PAID" }
+  @Patch(':id/status')
+  @UseGuards(JwtAuthGuard)
+  async updatePaymentStatus(
+    @Param('id', ParseIntPipe) id: number,
+    @Body('status') status: 'PAID' | 'UNPAID' | 'CANCELLED',
+  ) {
+    return this.subscriptionService.updatePaymentStatus(id, status || 'PAID');
+  }
+
+  // 👉 3. GET /api/subscriptions/my-subscriptions (Khách xem các gói đã mua của mình)
+  @Get('my-subscriptions')
+  @UseGuards(JwtAuthGuard)
+  async getMySubscriptions(@Req() req: any) {
+    const userId = req.user.id || req.user.userId;
+    return this.subscriptionService.getUserSubscriptions(userId);
+  }
+
+  // 👉 4. GET /api/subscriptions (Lấy toàn bộ danh sách để Admin duyệt đơn)
+  @Get()
+  @UseGuards(JwtAuthGuard)
+  async getAllSubscriptions() {
+    return this.subscriptionService.getAllSubscriptions();
+  }
+}
