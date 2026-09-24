@@ -6,6 +6,7 @@ import { PrismaModule } from './prisma/prisma.module.js';
 import { ConfigModule } from '@nestjs/config';
 import { PlansModule } from './plans/plans.module.js';
 import { DishModule } from './dish/dish.module.js';
+import { SubscriptionModule } from './subscription/subscription.module.js';
 
 @Module({
   imports: [
@@ -14,6 +15,9 @@ import { DishModule } from './dish/dish.module.js';
     ConfigModule.forRoot({ isGlobal: true }),
     PlansModule,
     DishModule,
+     ConfigModule.forRoot({ isGlobal: true }),
+     PlansModule,
+     SubscriptionModule, // 👈 Nạp .env cho toàn bộ app
   ],
   controllers: [AppController],
   providers: [AppService],
