@@ -5,13 +5,15 @@ import { AuthModule } from './auth/auth.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { ConfigModule } from '@nestjs/config';
 import { PlansModule } from './plans/plans.module.js';
+import { DishModule } from './dish/dish.module.js';
 
 @Module({
   imports: [
     PrismaModule,
     AuthModule,
-     ConfigModule.forRoot({ isGlobal: true }),
-     PlansModule, // 👈 Nạp .env cho toàn bộ app
+    ConfigModule.forRoot({ isGlobal: true }),
+    PlansModule,
+    DishModule,
   ],
   controllers: [AppController],
   providers: [AppService],
