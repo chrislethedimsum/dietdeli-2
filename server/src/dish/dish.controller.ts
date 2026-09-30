@@ -1,7 +1,8 @@
-import { Controller, Post, Patch, Body, Param, ParseIntPipe, Get } from '@nestjs/common';
+import { Controller, Post, Patch, Body, Param, ParseIntPipe, Get, UseGuards } from '@nestjs/common';
 import { DishService } from './dish.service.js';
 import { CreateDishDto } from './dto/createDish.dto.js';
 import { UpdateDishDto } from './dto/updateDish.dto.js';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('dish')
 export class DishController {
@@ -18,11 +19,13 @@ export class DishController {
   }
 
   @Post()
+  @UseGuards(AuthGuard('jwt'))
   async create(@Body() createDishDto: CreateDishDto) {
     return this.dishService.create(createDishDto);
   }
 
   @Patch(':id')
+  @UseGuards(AuthGuard('jwt'))
   async update(
     @Param('id', ParseIntPipe) id: number, 
     @Body() updateDishDto: UpdateDishDto,

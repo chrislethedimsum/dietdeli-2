@@ -2,6 +2,8 @@ import { createBrowserRouter } from "react-router";
 import Login from "./pages/Login";
 import MainLayout from "./components/main/MainLayout";
 import IndexMain from "./pages/IndexMain";
+import AdminLayout from "./components/admin/AdminLayout";
+import Dashboard from "./pages/Dashboard";
 
 export const router = createBrowserRouter([
   {
@@ -18,4 +20,30 @@ export const router = createBrowserRouter([
     path: "/login",
     Component: Login,
   },
+  {
+    path: "/admin",
+    Component: AdminLayout,
+    children: [
+      {
+        index: true,
+        Component: Dashboard,
+      },
+      {
+        path: "menu",
+        Component: () => <div>Menu Page</div>,
+      },
+      {
+        path: "dishes",
+        Component: () => <div>Dishes Page</div>,
+      },
+      {
+        path: "orders",
+        Component: () => <div>Orders Page</div>,
+      },
+      {
+        path: "customers",
+        Component: () => <div>Customers Page</div>,
+      }
+    ]
+  }
 ]);
