@@ -56,8 +56,8 @@ export default function Login() {
 
             {/* Title */}
             <div className="mb-8">
-              <p className="text-orange-500 font-medium text-sm">Welcome Back!</p>
-              <h2 className="text-3xl font-bold text-gray-800 mt-1">Login Your Account</h2>
+              <p className="text-orange-500 font-medium text-sm text-center">Welcome Back!</p>
+              <h2 className="text-3xl font-bold text-purple-950 mt-1 text-center">Login Your Account</h2>
             </div>
 
             {/* Thông báo lỗi nếu có */}

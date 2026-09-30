@@ -1,15 +1,23 @@
+import { useLocation, Outlet } from "react-router";
 import MainFooter from "./MainFooter";
+import IndexHeader from "./IndexHeader";
 import MainHeader from "./MainHeader";
-import { Outlet } from "react-router";
 
 export default function MainLayout() {
+  const location = useLocation();
+  // Kiểm tra nếu là trang chủ ("/")
+  const isHomePage = location.pathname === "/";
+
   return (
-    <>
-      <MainHeader />
-      <main>
+    <div className="min-h-screen flex flex-col bg-white">
+      {/* Trang chủ ("/") thì dùng MainHeader (không banner), các trang khác dùng IndexHeader (có banner ảnh nền) */}
+      {isHomePage ? <MainHeader /> : <IndexHeader />}
+
+      <main className="flex-1">
         <Outlet />
       </main>
+
       <MainFooter />
-    </>
+    </div>
   );
 }

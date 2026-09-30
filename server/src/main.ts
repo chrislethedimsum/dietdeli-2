@@ -11,7 +11,13 @@ async function bootstrap() {
 
   // 2. Bật CORS cho React kết nối
   app.enableCors({
-    origin: 'http://localhost:5173',
+    origin: [
+      'http://localhost:5173',
+      'http://localhost:5174',
+      'http://localhost:5175',
+      /^http:\/\/localhost:\d+$/,
+      /^http:\/\/127\.0\.0\.1:\d+$/,
+    ],
     credentials: true,
   });
 
