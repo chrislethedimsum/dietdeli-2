@@ -9,11 +9,11 @@ export default function MainLayout() {
   const isHomePage = location.pathname === "/";
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
+    <div className="min-h-screen flex flex-col bg-white overflow-x-hidden w-full">
       {/* Trang chủ ("/") thì dùng MainHeader (không banner), các trang khác dùng IndexHeader (có banner ảnh nền) */}
       {isHomePage ? <MainHeader /> : <IndexHeader />}
 
-      <main className="flex-1">
+      <main className="flex-1 w-full overflow-x-hidden">
         <Outlet />
       </main>
 

@@ -135,7 +135,7 @@ export default function Login() {
           {/* Footer form: Đăng ký & Social */}
           <div className="mt-8 border-t border-gray-100 pt-6 text-center">
             <p className="text-sm text-gray-600">
-              Don’t Have an Account?{" "}
+              Don’t Have an Account?
               <Link to="/register" className="text-orange-500 font-semibold hover:underline">
                 Sign Up Now
               </Link>
