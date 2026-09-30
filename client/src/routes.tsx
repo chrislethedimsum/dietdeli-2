@@ -4,6 +4,7 @@ import MainLayout from "./components/main/MainLayout";
 import IndexMain from "./pages/IndexMain";
 import AdminLayout from "./components/admin/AdminLayout";
 import Dashboard from "./pages/Dashboard";
+import Customers from "./pages/Customers";
 
 export const router = createBrowserRouter([
   {
@@ -42,7 +43,7 @@ export const router = createBrowserRouter([
       },
       {
         path: "customers",
-        Component: () => <div>Customers Page</div>,
+        Component: Customers,
       }
     ]
   }
