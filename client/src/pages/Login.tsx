@@ -14,7 +14,7 @@ export default function Login() {
   const [errorMessage, setErrorMessage] = useState("");
 
   // 2. Xử lý khi bấm nút "Login Now"
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     setErrorMessage("");
     setLoading(true);
@@ -29,10 +29,11 @@ export default function Login() {
       // Lưu Token vào LocalStorage
       const { accessToken, user } = response.data;
       localStorage.setItem("token", accessToken);
+      console.log(user);
       localStorage.setItem("user", JSON.stringify(user));
 
       alert("Đăng nhập thành công!");
-      navigate("/"); // Chuyển về trang chủ hoặc dashboard
+      navigate("/admin"); // Chuyển về trang chủ hoặc dashboard
     } catch (error: any) {
       const msg = error.response?.data?.message || "Đăng nhập thất bại. Vui lòng thử lại!";
       setErrorMessage(msg);

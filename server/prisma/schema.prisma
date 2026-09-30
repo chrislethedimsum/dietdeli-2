@@ -1,139 +1,132 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-generator client {
-  provider = "prisma-client-js"
-}
-
 model User {
-  id             Int       @id @default(autoincrement())
-  name           String
-  email          String    @unique
-  password       String
-  phone          String
-  dob            DateTime?
-  address        String?
-  gender         String?
-  height         Int?
-  weight         Int?
-  goal           String?
-  activityLevel  String?   @map("activity_level")
-  createdAt      DateTime  @default(now()) @map("created_at")
-  updatedAt      DateTime  @updatedAt @map("updated_at")
-
-  orders             Order[]
-  userSubscriptions  UserSubscription[]
+  id                Int                @id @default(autoincrement())
+  name              String
+  email             String             @unique
+  password          String
+  phone             String
+  dob               DateTime?
+  address           String?
+  gender            String?
+  height            Int?
+  weight            Int?
+  goal              String?
+  activityLevel     String?            @map("activity_level")
+  isAdmin           Boolean            @default(false)
+  createdAt         DateTime           @default(now()) @map("created_at")
+  updatedAt         DateTime           @updatedAt @map("updated_at")
+  orders            Order[]
+  userSubscriptions UserSubscription[]
 
   @@map("user")
 }
 
 model MealPackage {
-  id                Int       @id @default(autoincrement())
+  id                Int                @id @default(autoincrement())
   name              String
-  caloriesPerMeal   Int       @map("calories_per_meal")
-  durationDays      Int       @map("duration_days")
+  caloriesPerMeal   Int                @map("calories_per_meal")
+  durationDays      Int                @map("duration_days")
   price             Int
-  totalMeals        Int       @map("total_meals")
-  isActive          Boolean   @default(true) @map("is_active")
-  createdAt         DateTime  @default(now()) @map("created_at")
-  updatedAt         DateTime  @updatedAt @map("updated_at")
-
-  orders             Order[]
-  userSubscriptions  UserSubscription[]
+  totalMeals        Int                @map("total_meals")
+  isActive          Boolean            @default(true) @map("is_active")
+  createdAt         DateTime           @default(now()) @map("created_at")
+  updatedAt         DateTime           @updatedAt @map("updated_at")
+  orders            Order[]
+  userSubscriptions UserSubscription[]
 
   @@map("meal_package")
 }
 
 model Dish {
-  id             Int       @id @default(autoincrement())
-  nameVi         String    @map("name_vi")
-  nameEn         String    @map("name_en")
-  descriptionVi  String?   @map("description_vi")
-  descriptionEn  String?   @map("description_en")
-  image          String?
-  createdAt      DateTime  @default(now()) @map("created_at")
-  updatedAt      DateTime  @updatedAt @map("updated_at")
-
-  menus       Menu[]
-  orderItems  OrderItem[]
+  id            Int         @id @default(autoincrement())
+  nameVi        String      @map("name_vi")
+  nameEn        String      @map("name_en")
+  descriptionVi String?     @map("description_vi")
+  descriptionEn String?     @map("description_en")
+  image         String?
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
+  menus         Menu[]
+  orderItems    OrderItem[]
 
   @@map("dish")
 }
 
 model Day {
-  id          Int       @id @default(autoincrement())
-  date        String
-  dayOfWeek   Int       @map("day_of_week")
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
-
-  menus Menu[]
+  id        Int      @id @default(autoincrement())
+  date      String
+  dayOfWeek Int      @map("day_of_week")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  menus     Menu[]
 
   @@map("day")
 }
 
 model Menu {
-  id         Int       @id @default(autoincrement())
-  dishId     Int       @map("dish_id")
-  idDay      Int       @map("id_day")
-  createdAt  DateTime  @default(now()) @map("created_at")
-  updatedAt  DateTime  @updatedAt @map("updated_at")
-
-  dish Dish @relation(fields: [dishId], references: [id], onDelete: Cascade)
-  day  Day  @relation(fields: [idDay], references: [id], onDelete: Cascade)
+  id        Int      @id @default(autoincrement())
+  dishId    Int      @map("dish_id")
+  idDay     Int      @map("id_day")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  dish      Dish     @relation(fields: [dishId], references: [id], onDelete: Cascade)
+  day       Day      @relation(fields: [idDay], references: [id], onDelete: Cascade)
 
   @@map("menu")
 }
 
 model UserSubscription {
-  id              Int          @id @default(autoincrement())
-  idUser          Int          @map("id_user")
-  packageId       Int          @map("package_id")
-  startDate       DateTime     @map("start_date")
-  endDate         DateTime     @map("end_date")
-  paymentStatus   String       @default("UNPAID") @map("payment_status")
-  remainingMeals  Int          @map("remaining_meals")
-  createdAt       DateTime     @default(now()) @map("created_at")
-  updatedAt       DateTime     @updatedAt @map("updated_at")
-
-  user    User        @relation(fields: [idUser], references: [id], onDelete: Cascade)
-  package MealPackage @relation(fields: [packageId], references: [id], onDelete: Restrict)
-  orders  Order[]
+  id             Int         @id @default(autoincrement())
+  idUser         Int         @map("id_user")
+  packageId      Int         @map("package_id")
+  startDate      DateTime    @map("start_date")
+  endDate        DateTime    @map("end_date")
+  paymentStatus  String      @default("UNPAID") @map("payment_status")
+  remainingMeals Int         @map("remaining_meals")
+  createdAt      DateTime    @default(now()) @map("created_at")
+  updatedAt      DateTime    @updatedAt @map("updated_at")
+  orders         Order[]
+  user           User        @relation(fields: [idUser], references: [id], onDelete: Cascade)
+  package        MealPackage @relation(fields: [packageId], references: [id])
 
   @@map("user_subscription")
 }
 
 model Order {
-  id                   Int       @id @default(autoincrement())
-  userSubscriptionId   Int       @map("user_subscription_id")
-  userId               Int       @map("user_id")
-  packageId            Int       @map("package_id")
-  shippingAddress      String    @map("shipping_address")
-  shippingNote         String?   @map("shipping_note")
-  status               String    @default("ORDER")
-  createdAt            DateTime  @default(now()) @map("created_at")
-  updatedAt            DateTime  @updatedAt @map("updated_at")
-
-  userSubscription UserSubscription @relation(fields: [userSubscriptionId], references: [id], onDelete: Cascade)
-  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  package          MealPackage      @relation(fields: [packageId], references: [id], onDelete: Restrict)
-  orderItems       OrderItem[]
+  id                 Int              @id @default(autoincrement())
+  userSubscriptionId Int              @map("user_subscription_id")
+  userId             Int              @map("user_id")
+  packageId          Int              @map("package_id")
+  shippingAddress    String           @map("shipping_address")
+  shippingNote       String?          @map("shipping_note")
+  status             String           @default("ORDER")
+  createdAt          DateTime         @default(now()) @map("created_at")
+  updatedAt          DateTime         @updatedAt @map("updated_at")
+  package            MealPackage      @relation(fields: [packageId], references: [id])
+  user               User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userSubscription   UserSubscription @relation(fields: [userSubscriptionId], references: [id], onDelete: Cascade)
+  orderItems         OrderItem[]
 
   @@map("order")
 }
 
 model OrderItem {
-  id         Int       @id @default(autoincrement())
-  orderId    Int       @map("order_id")
-  dishId     Int       @map("dish_id")
-  quantity   Int
-  createdAt  DateTime  @default(now()) @map("created_at")
-  updatedAt  DateTime  @updatedAt @map("updated_at")
-
-  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  dish  Dish  @relation(fields: [dishId], references: [id], onDelete: Restrict)
+  id        Int      @id @default(autoincrement())
+  orderId   Int      @map("order_id")
+  dishId    Int      @map("dish_id")
+  quantity  Int
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  dish      Dish     @relation(fields: [dishId], references: [id])
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@map("order_item")
 }

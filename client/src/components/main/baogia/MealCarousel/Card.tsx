@@ -35,14 +35,10 @@ export default function Card({ data, index = 0 }: CardProps) {
       </div>
 
       {/* Tiêu đề gói ăn */}
-      <div className="px-5 text-purple-950 text-xl sm:text-2xl font-bold tracking-tight">
-        {cardData.title}
-      </div>
+      <div className="px-5 text-purple-950 text-xl sm:text-2xl font-bold tracking-tight">{cardData.title}</div>
 
       {/* Mô tả chi tiết */}
-      <div className="px-5 py-3 text-gray-600 text-sm text-justify leading-relaxed flex-1">
-        {cardData.description}
-      </div>
+      <div className="px-5 py-3 text-gray-600 text-sm text-justify leading-relaxed flex-1">{cardData.description}</div>
 
       {/* Thống kê số gói đã bán */}
       <div className="flex flex-row items-center px-5 py-4 font-bold text-gray-700 border-t border-gray-100 mt-auto bg-gray-50/50">

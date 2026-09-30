@@ -5,20 +5,29 @@ import IndexMain from "./pages/IndexMain";
 import BaoGia from "./pages/BaoGia";
 import AdminLayout from "./components/admin/AdminLayout";
 import Dashboard from "./pages/Dashboard";
+import GuestRoute from "./components/auth/GuestRoute";
 
 export const router = createBrowserRouter([
+  // 1. Nhóm bọc bởi GuestRoute (bao gồm "/" và "/login")
   {
-    path: "/",
-    Component: MainLayout,
+    Component: GuestRoute,
     children: [
-      { index: true, Component: IndexMain },
-      { path: "baogia", Component: BaoGia },
+      {
+        path: "/",
+        Component: MainLayout,
+        children: [
+          { index: true, Component: IndexMain },
+          { path: "baogia", Component: BaoGia },
+        ],
+      },
+      {
+        path: "/login",
+        Component: Login,
+      },
     ],
   },
-  {
-    path: "/login",
-    Component: Login,
-  },
+
+  // 2. Nhóm Admin (Nằm riêng biệt ngoài GuestRoute)
   {
     path: "/admin",
     Component: AdminLayout,

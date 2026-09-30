@@ -28,7 +28,7 @@ export default function MealPricingModal(props: MealPricingModalProps & Partial<
                 <Calculator size={20} />
               </div>
               <div className="min-w-0 flex-1">
-                <Modal.Heading className="text-lg sm:text-xl font-bold text-purple-950 break-words">
+                <Modal.Heading className="text-lg sm:text-xl font-bold text-purple-950 wrap-break-words">
                   Báo giá {cardData.title}
                 </Modal.Heading>
                 <div className="flex items-center gap-1.5 text-xs text-gray-500 mt-0.5">
@@ -42,12 +42,7 @@ export default function MealPricingModal(props: MealPricingModalProps & Partial<
               {/* Hotline hỗ trợ Zalo */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 bg-gray-50 rounded-2xl border border-gray-200 text-xs gap-2">
                 <span className="font-semibold text-gray-700">Tư vấn nhanh qua Zalo:</span>
-                <a
-                  href="https://zalo.me/0389150399"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-orange-600 font-bold hover:underline"
-                >
+                <a href="https://zalo.me/0389150399" target="_blank" rel="noreferrer" className="text-orange-600 font-bold hover:underline">
                   0389150399
                 </a>
               </div>
@@ -63,9 +58,7 @@ export default function MealPricingModal(props: MealPricingModalProps & Partial<
                       <p className="text-xs text-gray-500">Phù hợp ăn Trưa hoặc Tối</p>
                     </div>
                     <div className="mt-3">
-                      <p className="text-base sm:text-lg font-extrabold text-purple-950">
-                        {cardData.pricing.oneMeal}
-                      </p>
+                      <p className="text-base sm:text-lg font-extrabold text-purple-950">{cardData.pricing.oneMeal}</p>
                     </div>
                   </div>
 
@@ -77,9 +70,7 @@ export default function MealPricingModal(props: MealPricingModalProps & Partial<
                       <p className="text-xs text-gray-500">Trọn vẹn bữa Trưa + Bữa Tối</p>
                     </div>
                     <div className="mt-3">
-                      <p className="text-base sm:text-lg font-extrabold text-orange-600">
-                        {cardData.pricing.twoMeals}
-                      </p>
+                      <p className="text-base sm:text-lg font-extrabold text-orange-600">{cardData.pricing.twoMeals}</p>
                     </div>
                   </div>
                 </div>
