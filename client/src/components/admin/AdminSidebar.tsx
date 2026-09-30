@@ -1,4 +1,4 @@
-import { NavLink } from "react-router";
+import { NavLink, useNavigate } from "react-router";
 
 interface AdminSidebarProps {
     isOpen: boolean;
@@ -108,6 +108,20 @@ export default function AdminSidebar({
     isOpen,
     onClose,
 }: AdminSidebarProps) {
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        // 1. Xóa token và user khỏi localStorage
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+
+        // 2. Đóng sidebar mobile nếu đang mở
+        onClose();
+
+        // 3. Điều hướng về trang login
+        navigate("/login");
+    };
+
     return (
         <aside
             className={`
@@ -195,7 +209,8 @@ export default function AdminSidebar({
             <div className="border-t border-gray-200 p-3">
                 <button
                     type="button"
-                    className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-600 transition hover:bg-red-50 hover:text-red-600"
+                    onClick={handleLogout}
+                    className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-600 transition hover:bg-red-50 hover:text-red-600 cursor-pointer"
                 >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"

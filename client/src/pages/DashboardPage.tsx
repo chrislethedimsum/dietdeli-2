@@ -1,4 +1,4 @@
-import { Card, CardHeader, Chip, Button, Avatar } from "@heroui/react";
+import { Card, CardHeader, Chip, Button, Avatar, Table } from "@heroui/react";
 
 const statistics = [
     {
@@ -145,7 +145,7 @@ function getStatusColor(status: string) {
     }
 }
 
-export default function Dashboard() {
+export default function DashboardPage() {
     return (
         <div className="space-y-6">
             {/* Page Header */}
@@ -290,55 +290,67 @@ export default function Dashboard() {
                 <Card.Content className="px-5">
                     {/* Desktop table */}
                     <div className="hidden overflow-x-auto md:block">
-                        <table className="w-full text-left">
-                            <thead>
-                                <tr className="border-b border-gray-100">
-                                    <th className="pb-3 text-xs font-medium uppercase text-gray-400">Mã đơn</th>
+                        <Table>
+                            <Table.ScrollContainer>
+                                <Table.Content aria-label="Danh sách khách hàng" className="min-w-[950px]">
+                                    <Table.Header>
+                                        <Table.Column id="code" className="pb-3 text-xs font-medium uppercase text-gray-400">
+                                            Mã đơn
+                                        </Table.Column>
 
-                                    <th className="pb-3 text-xs font-medium uppercase text-gray-400">Khách hàng</th>
+                                        <Table.Column id="customer" className="pb-3 text-xs font-medium uppercase text-gray-400">
+                                            Khách hàng
+                                        </Table.Column>
 
-                                    <th className="pb-3 text-xs font-medium uppercase text-gray-400">Gói ăn</th>
+                                        <Table.Column id="combo" className="pb-3 text-xs font-medium uppercase text-gray-400">
+                                            Gói ăn
+                                        </Table.Column>
 
-                                    <th className="pb-3 text-xs font-medium uppercase text-gray-400">Giá trị</th>
+                                        <Table.Column id="cost" className="pb-3 text-xs font-medium uppercase text-gray-400">
+                                            Giá trị
+                                        </Table.Column>
 
-                                    <th className="pb-3 text-xs font-medium uppercase text-gray-400">Trạng thái</th>
-                                </tr>
-                            </thead>
+                                        <Table.Column id="status" className="pb-3 text-xs font-medium uppercase text-gray-400">
+                                            Trạng thái
+                                        </Table.Column>
+                                    </Table.Header>
 
-                            <tbody>
-                                {recentOrders.map((order) => (
-                                    <tr key={order.id} className="border-b border-gray-50 last:border-0">
-                                        <td className="py-4 text-sm font-medium text-gray-900">{order.id}</td>
+                                    <Table.Body>
+                                        {recentOrders.map((order) => (
+                                            <Table.Row key={order.id} className="border-b border-gray-50 last:border-0">
+                                                <Table.Cell className="py-4 text-sm font-medium text-gray-900">{order.id}</Table.Cell>
 
-                                        <td className="py-4">
-                                            <div className="flex items-center gap-3">
-                                                <Avatar>
-                                                    <Avatar.Fallback className="bg-emerald-100 text-emerald-700">
-                                                        {order.customer
-                                                            .split(" ")
-                                                            .map((x) => x[0])
-                                                            .join("")
-                                                            .slice(-2)}
-                                                    </Avatar.Fallback>
-                                                </Avatar>
+                                                <Table.Cell className="py-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <Avatar>
+                                                            <Avatar.Fallback className="bg-emerald-100 text-emerald-700">
+                                                                {order.customer
+                                                                    .split(" ")
+                                                                    .map((x) => x[0])
+                                                                    .join("")
+                                                                    .slice(-2)}
+                                                            </Avatar.Fallback>
+                                                        </Avatar>
 
-                                                <span className="text-sm text-gray-700">{order.customer}</span>
-                                            </div>
-                                        </td>
+                                                        <span className="text-sm text-gray-700">{order.customer}</span>
+                                                    </div>
+                                                </Table.Cell>
 
-                                        <td className="py-4 text-sm text-gray-600">{order.plan}</td>
+                                                <Table.Cell className="py-4 text-sm text-gray-600">{order.plan}</Table.Cell>
 
-                                        <td className="py-4 text-sm font-medium text-gray-900">{order.amount}</td>
+                                                <Table.Cell className="py-4 text-sm font-medium text-gray-900">{order.amount}</Table.Cell>
 
-                                        <td className="py-4">
-                                            <Chip size="sm" variant="soft" color={getStatusColor(order.status) as "success" | "accent" | "warning" | "default"}>
-                                                {order.status}
-                                            </Chip>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                                <Table.Cell className="py-4">
+                                                    <Chip size="sm" variant="soft" color={getStatusColor(order.status) as "success" | "accent" | "warning" | "default"}>
+                                                        {order.status}
+                                                    </Chip>
+                                                </Table.Cell>
+                                            </Table.Row>
+                                        ))}
+                                    </Table.Body>
+                                </Table.Content>
+                            </Table.ScrollContainer>
+                        </Table>
                     </div>
 
                     {/* Mobile cards */}
