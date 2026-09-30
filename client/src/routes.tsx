@@ -1,10 +1,21 @@
-import { createBrowserRouter } from "react-router";
+import { createBrowserRouter, Navigate } from "react-router";
 import Login from "./pages/Login";
 import MainLayout from "./components/main/MainLayout";
 import IndexMain from "./pages/IndexMain";
 import AdminLayout from "./components/admin/AdminLayout";
-import Dashboard from "./pages/Dashboard";
-import Customers from "./pages/Customers";
+import DashboardPage from "./pages/DashboardPage";
+import CustomersPage from "./pages/CustomersPage";
+import OrdersPage from "./pages/OrdersPage";
+import DishesPage from "./pages/DishesPage";
+import MenuPage from "./pages/MenuPage";
+
+const requireAdmin = (Component: React.ComponentType) => {
+  return (props: React.ComponentProps<React.ComponentType>) => {
+    // const isAdmin = localStorage.getItem("role") === "admin"; // Kiểm tra quyền admin từ localStorage (hoặc từ context, redux, v.v.)
+    const isAdmin = true;
+    return isAdmin ? <Component {...props} /> : <Navigate to="/login" />;
+  };
+};
 
 export const router = createBrowserRouter([
   {
@@ -23,27 +34,27 @@ export const router = createBrowserRouter([
   },
   {
     path: "/admin",
-    Component: AdminLayout,
+    Component: requireAdmin(AdminLayout),
     children: [
       {
         index: true,
-        Component: Dashboard,
+        Component: DashboardPage,
       },
       {
         path: "menu",
-        Component: () => <div>Menu Page</div>,
+        Component: MenuPage,
       },
       {
         path: "dishes",
-        Component: () => <div>Dishes Page</div>,
+        Component: DishesPage,
       },
       {
         path: "orders",
-        Component: () => <div>Orders Page</div>,
+        Component: OrdersPage,
       },
       {
         path: "customers",
-        Component: Customers,
+        Component: CustomersPage,
       }
     ]
   }

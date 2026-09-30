@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Avatar, Button, Card, Input, Label, ListBox, Select, TextField } from "@heroui/react";
+import { Avatar, Button, Card, Input, Label, ListBox, Select, Table, TextField } from "@heroui/react";
 
 type CustomerStatus = "active" | "inactive";
 
@@ -127,7 +127,7 @@ function getStatusClass(status: CustomerStatus) {
     return "bg-gray-100 text-gray-600";
 }
 
-export default function Customers() {
+export default function CustomersPage() {
     const [search, setSearch] = useState("");
     const [status, setStatus] = useState<string | null>("all");
     const [subscription, setSubscription] = useState<string | null>("all");
@@ -283,67 +283,88 @@ export default function Customers() {
 
                 {/* Desktop Table */}
                 <div className="hidden overflow-x-auto md:block">
-                    <table className="w-full min-w-[950px]">
-                        <thead>
-                            <tr className="border-y border-gray-100 bg-gray-50">
-                                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Khách hàng</th>
+                    <Table>
+                        <Table.ScrollContainer>
+                            <Table.Content aria-label="Danh sách khách hàng" className="min-w-[950px]">
+                                <Table.Header>
+                                    <Table.Column id="customer" className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                                        Khách hàng
+                                    </Table.Column>
 
-                                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Liên hệ</th>
+                                    <Table.Column id="contact" className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                                        Liên hệ
+                                    </Table.Column>
 
-                                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Subscription</th>
+                                    <Table.Column id="subscription" className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                                        Subscription
+                                    </Table.Column>
 
-                                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Đơn hàng</th>
+                                    <Table.Column id="orders" className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                                        Đơn hàng
+                                    </Table.Column>
 
-                                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Tổng chi tiêu</th>
+                                    <Table.Column id="totalSpent" className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                                        Tổng chi tiêu
+                                    </Table.Column>
 
-                                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Trạng thái</th>
+                                    <Table.Column id="status" className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                                        Trạng thái
+                                    </Table.Column>
 
-                                <th className="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">Thao tác</th>
-                            </tr>
-                        </thead>
+                                    <Table.Column id="actions" className="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">
+                                        Thao tác
+                                    </Table.Column>
+                                </Table.Header>
 
-                        <tbody>
-                            {filteredCustomers.map((customer) => (
-                                <tr key={customer.id} className="border-b border-gray-100 transition hover:bg-gray-50">
-                                    <td className="px-5 py-4">
-                                        <div className="flex items-center gap-3">
-                                            <Avatar>
-                                                <Avatar.Fallback className="bg-emerald-100 text-emerald-700">{getInitials(customer.name)}</Avatar.Fallback>
-                                            </Avatar>
+                                <Table.Body items={filteredCustomers} renderEmptyState={() => <div className="py-10 text-center text-sm text-gray-500">Không tìm thấy khách hàng</div>}>
+                                    {(customer) => (
+                                        <Table.Row id={customer.id} className="border-b border-gray-100 transition hover:bg-gray-50">
+                                            {/* Khách hàng */}
+                                            <Table.Cell className="px-5 py-4">
+                                                <div className="flex items-center gap-3">
+                                                    <Avatar>
+                                                        <Avatar.Fallback className="bg-emerald-100 text-emerald-700">{getInitials(customer.name)}</Avatar.Fallback>
+                                                    </Avatar>
 
-                                            <div>
-                                                <p className="text-sm font-medium text-gray-900">{customer.name}</p>
+                                                    <div>
+                                                        <p className="text-sm font-medium text-gray-900">{customer.name}</p>
 
-                                                <p className="text-xs text-gray-400">{customer.id}</p>
-                                            </div>
-                                        </div>
-                                    </td>
+                                                        <p className="text-xs text-gray-400">{customer.id}</p>
+                                                    </div>
+                                                </div>
+                                            </Table.Cell>
 
-                                    <td className="px-5 py-4">
-                                        <p className="text-sm text-gray-700">{customer.email}</p>
+                                            {/* Liên hệ */}
+                                            <Table.Cell className="px-5 py-4">
+                                                <p className="text-sm text-gray-700">{customer.email}</p>
 
-                                        <p className="mt-1 text-xs text-gray-400">{customer.phone}</p>
-                                    </td>
+                                                <p className="mt-1 text-xs text-gray-400">{customer.phone}</p>
+                                            </Table.Cell>
 
-                                    <td className="px-5 py-4 text-sm text-gray-700">{customer.subscription}</td>
+                                            {/* Subscription */}
+                                            <Table.Cell className="px-5 py-4 text-sm text-gray-700">{customer.subscription}</Table.Cell>
 
-                                    <td className="px-5 py-4 text-sm font-medium text-gray-700">{customer.orders}</td>
+                                            {/* Orders */}
+                                            <Table.Cell className="px-5 py-4 text-sm font-medium text-gray-700">{customer.orders}</Table.Cell>
 
-                                    <td className="px-5 py-4 text-sm font-semibold text-gray-900">{customer.totalSpent}</td>
+                                            {/* Total spent */}
+                                            <Table.Cell className="px-5 py-4 text-sm font-semibold text-gray-900">{customer.totalSpent}</Table.Cell>
 
-                                    <td className="px-5 py-4">
-                                        <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${getStatusClass(customer.status)}`}>{getStatusLabel(customer.status)}</span>
-                                    </td>
+                                            {/* Status */}
+                                            <Table.Cell className="px-5 py-4">
+                                                <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${getStatusClass(customer.status)}`}>{getStatusLabel(customer.status)}</span>
+                                            </Table.Cell>
 
-                                    <td className="px-5 py-4 text-right">
-                                        <Button variant="ghost" className="text-emerald-600 hover:bg-emerald-50">
-                                            Chi tiết
-                                        </Button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                                            {/* Actions */}
+                                            <Table.Cell className="px-5 py-4 text-right">
+                                                <Button className="bg-emerald-50 text-sm font-medium text-emerald-600 hover:text-emerald-700">Chi tiết</Button>
+                                            </Table.Cell>
+                                        </Table.Row>
+                                    )}
+                                </Table.Body>
+                            </Table.Content>
+                        </Table.ScrollContainer>
+                    </Table>
                 </div>
 
                 {/* Mobile */}
