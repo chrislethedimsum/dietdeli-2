@@ -45,7 +45,11 @@ export class DishService {
     });
   }
 
-  async update(id: number, updateDishDto: UpdateDishDto) {
+  async update(
+    id: number,
+    updateDishDto: UpdateDishDto,
+    image?: Express.Multer.File,
+  ) {
     const dishExists = await this.prisma.dish.findUnique({
       where: { id },
     });
@@ -54,9 +58,14 @@ export class DishService {
       throw new NotFoundException(`Không tìm thấy món ăn với ID ${id}`);
     }
 
+    let imageUrl: string | null = dishExists.image;
+    if (image) {
+      imageUrl = await this.uploadService.uploadImage(image, 'dietdeli/dish');
+    }
+
     return this.prisma.dish.update({
       where: { id },
-      data: updateDishDto,
+      data: { ...updateDishDto, image: imageUrl },
     });
   }
 }

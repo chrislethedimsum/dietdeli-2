@@ -1,4 +1,4 @@
-import { IsOptional, IsString, IsUrl } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 
 export class UpdateDishDto {
   @IsString()
@@ -16,9 +16,4 @@ export class UpdateDishDto {
   @IsString()
   @IsOptional()
   readonly descriptionEn?: string;
-
-  @IsString()
-  @IsOptional()
-  @IsUrl({}, { message: 'Đường dẫn ảnh không hợp lệ' })
-  readonly image?: string;
 }
