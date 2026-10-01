@@ -157,4 +157,30 @@ export class AuthService {
     });
     return { message: 'Đăng xuất thành công' };
   }
+
+  // 4. Lấy thông tin user hiện tại
+  async getMe(userId: number) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        address: true,
+        gender: true,
+        dob: true,
+        height: true,
+        weight: true,
+        goal: true,
+        activityLevel: true,
+        isAdmin: true,
+        createdAt: true,
+      },
+    });
+    if (!user) {
+      throw new UnauthorizedException('Người dùng không tồn tại');
+    }
+    return user;
+  }
 }

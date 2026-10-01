@@ -25,6 +25,10 @@ export const authApi = {
     return response.data;
   },
   logout: () => axiosClient.post("/auth/logout"),
+  getMe: async () => {
+    const response = await axiosClient.get("/auth/me");
+    return response.data;
+  },
   // Sau này có thể thêm:
   // register: (dto: RegisterDto) => axiosClient.post("/auth/register", dto),
   // getMe: () => axiosClient.get("/auth/me"),

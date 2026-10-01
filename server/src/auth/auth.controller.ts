@@ -58,4 +58,11 @@ export class AuthController {
     }
     return this.authService.refreshAccessToken(refreshToken);
   }
+
+  @Get('getme')
+  @UseGuards(JwtAuthGuard)
+  async getMe(@Req() req: any) {
+    const userId = req.user?.id;
+    return this.authService.getMe(userId);
+  }
 }
