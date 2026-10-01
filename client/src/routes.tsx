@@ -8,7 +8,7 @@ import GuestRoute from "./components/auth/GuestRoute";
 import DashboardPage from "./pages/DashboardPage";
 import CustomersPage from "./pages/CustomersPage";
 import OrdersPage from "./pages/OrdersPage";
-import DishesPage from "./pages/DishesPage";
+import DishesPage from "./pages/DishesPage/DishesPage";
 import MenuPage from "./pages/MenuPage";
 import { useAuthStore } from "./store/useAuthStore";
 
