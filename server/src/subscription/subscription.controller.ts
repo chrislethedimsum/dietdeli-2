@@ -12,6 +12,7 @@ import {
 import { SubscriptionService } from './subscription.service.js';
 import { CheckoutSubscriptionDto } from './dto/usersubscription.dto.js';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
+import { AdminGuard } from '../auth/guards/admin.guard.js';
 
 @Controller('subscriptions')
 export class SubscriptionController {
@@ -19,7 +20,7 @@ export class SubscriptionController {
 
   // 👉 1. POST /api/subscriptions/checkout (Khách hàng tạo đơn mua gói)
   @Post('checkout')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AdminGuard)
   async checkout(@Req() req: any, @Body() dto: CheckoutSubscriptionDto) {
     const userId = req.user.id || req.user.userId;
     return this.subscriptionService.checkout(userId, dto);
@@ -28,7 +29,7 @@ export class SubscriptionController {
   // 👉 2. PATCH /api/subscriptions/:id/status (Đánh dấu trạng thái thanh toán thủ công)
   // Ví dụ: body { "status": "PAID" }
   @Patch(':id/status')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AdminGuard)
   async updatePaymentStatus(
     @Param('id', ParseIntPipe) id: number,
     @Body('status') status: 'PAID' | 'UNPAID' | 'CANCELLED',
@@ -38,7 +39,7 @@ export class SubscriptionController {
 
   // 👉 3. GET /api/subscriptions/my-subscriptions (Khách xem các gói đã mua của mình)
   @Get('my-subscriptions')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AdminGuard)
   async getMySubscriptions(@Req() req: any) {
     const userId = req.user.id || req.user.userId;
     return this.subscriptionService.getUserSubscriptions(userId);
@@ -46,7 +47,7 @@ export class SubscriptionController {
 
   // 👉 4. GET /api/subscriptions (Lấy toàn bộ danh sách để Admin duyệt đơn)
   @Get()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AdminGuard)
   async getAllSubscriptions() {
     return this.subscriptionService.getAllSubscriptions();
   }

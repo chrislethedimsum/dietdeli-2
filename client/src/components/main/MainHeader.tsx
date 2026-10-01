@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { NavLink, Link, useLocation, useNavigate } from "react-router";
 import { ChevronDown, Menu, X, User as UserIcon, LogOut } from "lucide-react";
+import { useAuthStore } from "../../store/useAuthStore";
 
 export default function MainHeader() {
   const location = useLocation();
@@ -11,28 +12,12 @@ export default function MainHeader() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isMobileDropdownOpen, setIsMobileDropdownOpen] = useState(false);
 
-  // Auth state
-  const [user, setUser] = useState<{ name?: string; email?: string } | null>(null);
-
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    const storedUser = localStorage.getItem("user");
-    if (token && storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch {
-        setUser(null);
-      }
-    } else {
-      setUser(null);
-    }
-  }, [location.pathname]);
+  // Auth state from Zustand
+  const { user, logout } = useAuthStore();
 
   // Handle Logout
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    setUser(null);
+    logout();
     setIsMobileMenuOpen(false);
     navigate("/login");
   };

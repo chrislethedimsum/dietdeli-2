@@ -10,28 +10,32 @@ import CustomersPage from "./pages/CustomersPage";
 import OrdersPage from "./pages/OrdersPage";
 import DishesPage from "./pages/DishesPage";
 import MenuPage from "./pages/MenuPage";
+import { useAuthStore } from "./store/useAuthStore";
 
 const requireAdmin = (Component: React.ComponentType) => {
   return (props: React.ComponentProps<React.ComponentType>) => {
-    // const isAdmin = localStorage.getItem("role") === "admin"; // Kiểm tra quyền admin từ localStorage (hoặc từ context, redux, v.v.)
-    const isAdmin = true;
-    return isAdmin ? <Component {...props} /> : <Navigate to="/login" />;
+    const { isAuthenticated, isAdmin } = useAuthStore();
+    if (!isAuthenticated) return <Navigate to="/login" replace />;
+    if (!isAdmin) return <Navigate to="/" replace />;
+    return <Component {...props} />;
   };
 };
 
 export const router = createBrowserRouter([
-  // 1. Nhóm bọc bởi GuestRoute (bao gồm "/" và "/login")
+  // 1. Nhóm Public (Trang chủ & Báo giá - Khách hay User login đều xem được)
+  {
+    path: "/",
+    Component: MainLayout,
+    children: [
+      { index: true, Component: IndexMain },
+      { path: "baogia", Component: BaoGia },
+    ],
+  },
+
+  // 2. Nhóm Guest-Only (Chỉ người CHƯA đăng nhập mới vào được)
   {
     Component: GuestRoute,
     children: [
-      {
-        path: "/",
-        Component: MainLayout,
-        children: [
-          { index: true, Component: IndexMain },
-          { path: "baogia", Component: BaoGia },
-        ],
-      },
       {
         path: "/login",
         Component: Login,
@@ -39,31 +43,16 @@ export const router = createBrowserRouter([
     ],
   },
 
-  // 2. Nhóm Admin (Nằm riêng biệt ngoài GuestRoute)
+  // 3. Nhóm Admin (Bảo vệ bởi requireAdmin)
   {
     path: "/admin",
     Component: requireAdmin(AdminLayout),
     children: [
-      {
-        index: true,
-        Component: DashboardPage,
-      },
-      {
-        path: "menu",
-        Component: MenuPage,
-      },
-      {
-        path: "dishes",
-        Component: DishesPage,
-      },
-      {
-        path: "orders",
-        Component: OrdersPage,
-      },
-      {
-        path: "customers",
-        Component: CustomersPage,
-      },
+      { index: true, Component: DashboardPage },
+      { path: "menu", Component: MenuPage },
+      { path: "dishes", Component: DishesPage },
+      { path: "orders", Component: OrdersPage },
+      { path: "customers", Component: CustomersPage },
     ],
   },
 ]);

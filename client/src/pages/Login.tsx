@@ -2,9 +2,12 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import axios from "axios";
 import { Lock, Mail } from "lucide-react";
+import { useAuthStore } from "../store/useAuthStore";
+import { authApi } from "../api/auth";
 
 export default function Login() {
   const navigate = useNavigate();
+  const login = useAuthStore((state) => state.login);
 
   // 1. Quản lý trạng thái form (State)
   const [email, setEmail] = useState("");
@@ -20,23 +23,11 @@ export default function Login() {
     setLoading(true);
 
     try {
-      // Gọi API Backend NestJS mà bạn vừa viết
-      const response = await axios.post("http://localhost:3000/api/auth/login", {
-        email,
-        password,
-      });
-
-      // Lưu Token vào LocalStorage
-      const { accessToken, user } = response.data;
-      localStorage.setItem("token", accessToken);
-      console.log(user);
-      localStorage.setItem("user", JSON.stringify(user));
-
-      alert("Đăng nhập thành công!");
-      navigate("/admin"); // Chuyển về trang chủ hoặc dashboard
+      const data = await authApi.login({ email, password });
+      login(data.accessToken, data.user);
+      navigate(data.user.isAdmin ? "/admin" : "/");
     } catch (error: any) {
-      const msg = error.response?.data?.message || "Đăng nhập thất bại. Vui lòng thử lại!";
-      setErrorMessage(msg);
+      setErrorMessage(error.response?.data?.message || "Đăng nhập thất bại!");
     } finally {
       setLoading(false);
     }

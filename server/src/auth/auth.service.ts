@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import bcrypt from 'bcryptjs';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -18,7 +22,7 @@ export class AuthService {
     const existingUser = await this.prisma.user.findUnique({
       where: { email: email },
     });
-    
+
     if (existingUser) {
       throw new BadRequestException('Email này đã được sử dụng');
     }
@@ -59,7 +63,12 @@ export class AuthService {
       throw new UnauthorizedException('Email hoặc mật khẩu không chính xác');
     }
 
-    const payload = { sub: user.id, email: user.email, name: user.name };
+    const payload = {
+      sub: user.id,
+      email: user.email,
+      name: user.name,
+      isAdmin: user.isAdmin,
+    };
     const accessToken = this.jwtService.sign(payload);
 
     return {
@@ -71,6 +80,7 @@ export class AuthService {
         email: user.email,
         phone: user.phone,
         address: user.address,
+        isAdmin: user.isAdmin,
       },
     };
   }
