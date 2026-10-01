@@ -2,6 +2,7 @@ import { useState } from "react";
 import { NavLink, Link, useLocation, useNavigate } from "react-router";
 import { ChevronDown, Menu, X, User as UserIcon, LogOut } from "lucide-react";
 import { useAuthStore } from "../../store/useAuthStore";
+import { authApi } from "../../api/auth";
 
 export default function MainHeader() {
   const location = useLocation();
@@ -16,10 +17,14 @@ export default function MainHeader() {
   const { user, logout } = useAuthStore();
 
   // Handle Logout
-  const handleLogout = () => {
-    logout();
-    setIsMobileMenuOpen(false);
-    navigate("/login");
+  const handleLogout = async () => {
+    try {
+      await authApi.logout(); // Báo cho backend xóa token
+    } finally {
+      logout();
+      setIsMobileMenuOpen(false);
+      navigate("/login");
+    }
   };
 
   // Helper check active link

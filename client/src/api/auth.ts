@@ -8,6 +8,7 @@ export interface LoginDto {
 export interface LoginResponse {
   message: string;
   accessToken: string;
+  refreshToken: string;
   user: {
     id: number;
     name: string;
@@ -23,6 +24,7 @@ export const authApi = {
     const response = await axiosClient.post<LoginResponse>("/auth/login", dto);
     return response.data;
   },
+  logout: () => axiosClient.post("/auth/logout"),
   // Sau này có thể thêm:
   // register: (dto: RegisterDto) => axiosClient.post("/auth/register", dto),
   // getMe: () => axiosClient.get("/auth/me"),

@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router";
-import axios from "axios";
 import { Lock, Mail } from "lucide-react";
 import { useAuthStore } from "../store/useAuthStore";
 import { authApi } from "../api/auth";
@@ -24,7 +23,7 @@ export default function Login() {
 
     try {
       const data = await authApi.login({ email, password });
-      login(data.accessToken, data.user);
+      login(data.accessToken, data.refreshToken, data.user);
       navigate(data.user.isAdmin ? "/admin" : "/");
     } catch (error: any) {
       setErrorMessage(error.response?.data?.message || "Đăng nhập thất bại!");

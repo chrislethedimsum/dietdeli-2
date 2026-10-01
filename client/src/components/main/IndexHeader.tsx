@@ -2,6 +2,7 @@ import { useState } from "react";
 import { NavLink, Link, useLocation, useNavigate } from "react-router";
 import { ChevronDown, Menu, X, User as UserIcon, LogOut } from "lucide-react";
 import { useAuthStore } from "../../store/useAuthStore";
+import { authApi } from "../../api/auth";
 
 interface IndexHeaderProps {
   pageTitle?: string;
@@ -20,10 +21,14 @@ export default function IndexHeader({ pageTitle }: IndexHeaderProps) {
   const { user, logout } = useAuthStore();
 
   // Handle Logout
-  const handleLogout = () => {
-    logout();
-    setIsMobileMenuOpen(false);
-    navigate("/login");
+  const handleLogout = async () => {
+    try {
+      await authApi.logout();
+    } finally {
+      logout();
+      setIsMobileMenuOpen(false);
+      navigate("/login");
+    }
   };
 
   // Route title mapping for subpages

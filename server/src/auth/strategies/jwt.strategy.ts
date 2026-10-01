@@ -8,26 +8,18 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
+      // 👈 Dùng đúng secret của Access Token
       secretOrKey:
-        process.env.JWT_SECRET || 'dietdeli_super_secret_jwt_key_2026',
+        process.env.JWT_ACCESS_SECRET || 'dietdeli_access_secret_key_15m_2026',
     });
   }
 
-  // src/auth/strategies/jwt.strategy.ts
-  async validate(payload: {
-    sub: number;
-    email: string;
-    name: string;
-    isAdmin: Boolean;
-  }) {
-    if (!payload.sub) {
-      throw new UnauthorizedException('Token không hợp lệ');
-    }
+  async validate(payload: any) {
     return {
-      id: payload.sub, // 👈 Chuẩn hóa thành id
-      userId: payload.sub, // Dự phòng nếu có code cũ dùng userId
+      id: payload.sub,
       email: payload.email,
       name: payload.name,
+      isAdmin: payload.isAdmin,
     };
   }
 }

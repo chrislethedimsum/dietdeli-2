@@ -1,5 +1,6 @@
 import { NavLink, useNavigate } from "react-router";
 import { useAuthStore } from "../../store/useAuthStore";
+import { authApi } from "../../api/auth";
 
 interface AdminSidebarProps {
   isOpen: boolean;
@@ -93,10 +94,14 @@ export default function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
   const navigate = useNavigate();
 
   const logout = useAuthStore((state) => state.logout);
-  const handleLogout = () => {
-    logout(); // ✅ Tự xóa state và tự dọn dẹp sạch localStorage
-    onClose?.();
-    navigate("/login");
+  const handleLogout = async () => {
+    try {
+      await authApi.logout(); // Báo cho backend xóa token
+    } finally {
+      logout(); // ✅ Tự xóa state và tự dọn dẹp sạch localStorage
+      onClose?.();
+      navigate("/login");
+    }
   };
 
   return (
