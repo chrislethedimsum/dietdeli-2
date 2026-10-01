@@ -52,10 +52,12 @@ export class DishController {
 
   @Patch(':id')
   @UseGuards(AuthGuard('jwt'))
+  @UseInterceptors(FileInterceptor('image'))
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateDishDto: UpdateDishDto,
+    @UploadedFile() image?: Express.Multer.File,
   ) {
-    return this.dishService.update(id, updateDishDto);
+    return this.dishService.update(id, updateDishDto, image);
   }
 }
