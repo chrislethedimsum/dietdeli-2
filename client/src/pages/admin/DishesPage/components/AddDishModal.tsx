@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button, FieldError, Form, Input, Label, TextArea, TextField } from "@heroui/react";
 import CommonModal from "@/components/common/CommonModal";
 
@@ -101,6 +101,20 @@ export default function DishModal({ isOpen, onOpenChange, dish, onSubmit }: Dish
         handleClose();
     };
 
+    useEffect(() => {
+        if (dish) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setNameVi(dish.nameVi);
+            setNameEn(dish.nameEn);
+            setDescriptionVi(dish.descriptionVi ?? "");
+            setDescriptionEn(dish.descriptionEn ?? "");
+            setImagePreview(dish.image ?? null);
+        } else {
+            resetForm();
+        }
+        return;
+    }, [dish, isOpen]);
+
     return (
         <CommonModal
             isOpen={isOpen}
@@ -127,6 +141,7 @@ export default function DishModal({ isOpen, onOpenChange, dish, onSubmit }: Dish
                         isRequired
                         minLength={2}
                         maxLength={100}
+                        defaultValue={dish?.nameVi ?? ""}
                         validate={(value) => {
                             if (!value.trim()) {
                                 return "Vui lòng nhập tên món ăn";
@@ -151,6 +166,7 @@ export default function DishModal({ isOpen, onOpenChange, dish, onSubmit }: Dish
                         isRequired
                         minLength={2}
                         maxLength={100}
+                        defaultValue={dish?.nameEn ?? ""}
                         validate={(value) => {
                             if (!value.trim()) {
                                 return "Please fill the dish name";
