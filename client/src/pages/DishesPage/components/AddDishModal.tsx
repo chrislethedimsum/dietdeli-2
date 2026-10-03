@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Button, FieldError, Form, Input, Label, TextArea, TextField } from "@heroui/react";
 import CommonModal from "../../../components/common/CommonModal";
 
@@ -29,12 +29,12 @@ type DishModalProps = {
 export default function DishModal({ isOpen, onOpenChange, dish, onSubmit }: DishModalProps) {
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const [nameVi, setNameVi] = useState("");
-    const [nameEn, setNameEn] = useState("");
-    const [descriptionVi, setDescriptionVi] = useState("");
-    const [descriptionEn, setDescriptionEn] = useState("");
+    const [nameVi, setNameVi] = useState(dish?.nameVi ?? "");
+    const [nameEn, setNameEn] = useState(dish?.nameEn ?? "");
+    const [descriptionVi, setDescriptionVi] = useState(dish?.descriptionVi ?? "");
+    const [descriptionEn, setDescriptionEn] = useState(dish?.descriptionEn ?? "");
     const [image, setImage] = useState<File | null>(null);
-    const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [imagePreview, setImagePreview] = useState<string | null>(dish?.image ?? null);
 
     const isEdit = !!dish;
 
@@ -61,18 +61,32 @@ export default function DishModal({ isOpen, onOpenChange, dish, onSubmit }: Dish
 
         if (!file) return;
 
-        setImage(file);
+        const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
 
-        // Xóa preview cũ nếu có
+        if (!allowedTypes.includes(file.type)) {
+            alert("Ảnh phải có định dạng JPG, PNG hoặc WEBP");
+            event.target.value = "";
+            return;
+        }
+
+        if (file.size > 2 * 1024 * 1024) {
+            alert("Kích thước ảnh không được vượt quá 2MB");
+            event.target.value = "";
+            return;
+        }
+
         if (imagePreview?.startsWith("blob:")) {
             URL.revokeObjectURL(imagePreview);
         }
 
+        setImage(file);
         setImagePreview(URL.createObjectURL(file));
     };
 
-    const handleSubmit = () => {
-        if (!nameVi.trim()) {
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+
+        if (!nameVi.trim() || !nameEn.trim()) {
             return;
         }
 
@@ -87,28 +101,6 @@ export default function DishModal({ isOpen, onOpenChange, dish, onSubmit }: Dish
         handleClose();
     };
 
-    /**
-     * Khi mở modal:
-     * - Add: reset form
-     * - Edit: fill dữ liệu dish
-     */
-    
-    useEffect(() => {
-        if (!isOpen) return;
-
-        if (dish) {
-            // eslint-disable-next-line react-hooks/set-state-in-effect
-            setNameVi(dish.nameVi);
-            setNameEn(dish.nameEn);
-            setDescriptionVi(dish.descriptionVi ?? "");
-            setDescriptionEn(dish.descriptionEn ?? "");
-            setImage(null);
-            setImagePreview(dish.image);
-        } else {
-            resetForm();
-        }
-    }, [isOpen, dish]);
-
     return (
         <CommonModal
             isOpen={isOpen}
@@ -118,7 +110,7 @@ export default function DishModal({ isOpen, onOpenChange, dish, onSubmit }: Dish
             size="lg"
             footer={
                 <div className="flex w-full justify-end gap-3">
-                    <Button className="border border-gray-200 bg-white text-gray-700" onPress={handleClose}>
+                    <Button type="button" className="border border-gray-200 bg-white text-gray-700" onPress={handleClose}>
                         Huỷ
                     </Button>
 
@@ -129,7 +121,6 @@ export default function DishModal({ isOpen, onOpenChange, dish, onSubmit }: Dish
             }
         >
             <Form id="dish-form" className="space-y-5" onSubmit={handleSubmit}>
-                {/* Tên món */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <TextField
                         name="nameVi"
@@ -139,6 +130,10 @@ export default function DishModal({ isOpen, onOpenChange, dish, onSubmit }: Dish
                         validate={(value) => {
                             if (!value.trim()) {
                                 return "Vui lòng nhập tên món ăn";
+                            }
+
+                            if (value.trim().length < 2) {
+                                return "Tên món ăn phải có ít nhất 2 ký tự";
                             }
 
                             return true;
@@ -158,7 +153,11 @@ export default function DishModal({ isOpen, onOpenChange, dish, onSubmit }: Dish
                         maxLength={100}
                         validate={(value) => {
                             if (!value.trim()) {
-                                return "Vui lòng nhập tên món ăn";
+                                return "Please fill the dish name";
+                            }
+
+                            if (value.trim().length < 2) {
+                                return "Dish name must be at least 2 characters";
                             }
 
                             return true;
@@ -172,7 +171,6 @@ export default function DishModal({ isOpen, onOpenChange, dish, onSubmit }: Dish
                     </TextField>
                 </div>
 
-                {/* Mô tả tiếng Việt */}
                 <TextField name="descriptionVi" maxLength={500}>
                     <Label>Mô tả (Tiếng Việt)</Label>
 
@@ -181,7 +179,6 @@ export default function DishModal({ isOpen, onOpenChange, dish, onSubmit }: Dish
                     <FieldError />
                 </TextField>
 
-                {/* Mô tả tiếng Anh */}
                 <TextField name="descriptionEn" maxLength={500}>
                     <Label>Mô tả (Tiếng Anh)</Label>
 
@@ -190,7 +187,6 @@ export default function DishModal({ isOpen, onOpenChange, dish, onSubmit }: Dish
                     <FieldError />
                 </TextField>
 
-                {/* Image */}
                 <div>
                     <Label className="mb-2 block">Hình ảnh món ăn</Label>
 

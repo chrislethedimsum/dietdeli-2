@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
-import { Card, Input, Label, ListBox, Select, TextField } from "@heroui/react";
-import AddDishModal from "./components/AddDishModal";
+import { useEffect, useMemo, useState } from "react";
+import { Card, Input, Label, TextField } from "@heroui/react";
 import { getDishes, addDish, updateDish } from "../../api/dishes.api";
-import { formatDate } from "../../utils";
+import { formatDate, removeVietnameseTones } from "../../utils";
+import DishModal from "./components/AddDishModal";
 
 type Dish = {
     id: number;
@@ -22,76 +22,205 @@ export type DishFormData = {
     image: File | null;
 };
 
+/**
+ * Skeleton card
+ */
+function DishCardSkeleton() {
+    return (
+        <Card className="overflow-hidden rounded-xl border border-gray-200 shadow-sm">
+            {/* Image */}
+            <div className="aspect-[16/10] animate-pulse bg-gray-200" />
+
+            <Card.Content className="p-4">
+                {/* Name */}
+                <div className="animate-pulse">
+                    <div className="h-5 w-3/4 rounded bg-gray-200" />
+
+                    <div className="mt-2 h-3 w-1/2 rounded bg-gray-200" />
+                </div>
+
+                {/* Description */}
+                <div className="mt-4 space-y-2 animate-pulse">
+                    <div className="h-3 w-full rounded bg-gray-200" />
+
+                    <div className="h-3 w-5/6 rounded bg-gray-200" />
+                </div>
+            </Card.Content>
+
+            {/* Footer */}
+            <Card.Footer className="border-t border-gray-100 p-3">
+                <div className="flex w-full items-center justify-between animate-pulse">
+                    <div className="h-3 w-24 rounded bg-gray-200" />
+
+                    <div className="flex gap-3">
+                        <div className="h-4 w-8 rounded bg-gray-200" />
+
+                        <div className="h-4 w-12 rounded bg-gray-200" />
+                    </div>
+                </div>
+            </Card.Footer>
+        </Card>
+    );
+}
+
 export default function DishesPage() {
     const [search, setSearch] = useState("");
-    const [status, setStatus] = useState<string>("all");
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [dishes, setDishes] = useState<Dish[]>([]);
-    const [selectedDish, setSelectedDish] = useState<Dish | null>();
 
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
+    const [dishes, setDishes] = useState<Dish[]>([]);
+
+    const [selectedDish, setSelectedDish] = useState<Dish | null>(null);
+
+    const [isLoading, setIsLoading] = useState(true);
+
+    /**
+     * Lấy danh sách món ăn
+     */
+    const fetchDishes = async () => {
+        try {
+            setIsLoading(true);
+
+            const data = await getDishes();
+
+            setDishes(data);
+        } catch (error) {
+            console.error("Error fetching dishes:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    /**
+     * Load danh sách khi page được mount
+     */
+    useEffect(() => {
+        let cancelled = false;
+        const loadDishes = async () => {
+            try {
+                setIsLoading(true);
+
+                const data = await getDishes();
+
+                if (!cancelled) {
+                    setDishes(data);
+                }
+            } catch (error) {
+                if (!cancelled) {
+                    console.error("Error fetching dishes:", error);
+                }
+            } finally {
+                if (!cancelled) {
+                    setIsLoading(false);
+                }
+            }
+        };
+        loadDishes();
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+
+    /**
+     * Mở modal sửa
+     */
     const handleEdit = (dish: Dish) => {
         setSelectedDish(dish);
         setIsModalOpen(true);
     };
 
-    const handleAddDish = (data: { nameVi: string; nameEn: string; descriptionVi: string; descriptionEn: string; image: File | null }) => {
-        addDish(data);
+    /**
+     * Mở modal xóa
+     */
+    const handleRemove = () => {
+        alert("Xóa món ăn");
+    }
+
+    /**
+     * Mở modal thêm
+     */
+    const handleOpenAddModal = () => {
+        setSelectedDish(null);
+        setIsModalOpen(true);
     };
 
-    const handleUpdateDish = (id: number, data: { nameVi: string; nameEn: string; descriptionVi: string; descriptionEn: string; image: File | null }) => {
-        updateDish(id, data);
+    /**
+     * Đóng modal
+     */
+    const handleModalOpenChange = (isOpen: boolean) => {
+        setIsModalOpen(isOpen);
+
+        if (!isOpen) {
+            setSelectedDish(null);
+        }
     };
 
+    /**
+     * Thêm món ăn
+     */
+    const handleAddDish = async (data: DishFormData) => {
+        await addDish(data);
+    };
+
+    /**
+     * Cập nhật món ăn
+     */
+    const handleUpdateDish = async (id: number, data: DishFormData) => {
+        await updateDish(id, data);
+    };
+
+    /**
+     * Submit modal
+     *
+     * Nếu selectedDish có giá trị
+     * => UPDATE
+     *
+     * Nếu selectedDish null
+     * => CREATE
+     */
     const handleSubmitDish = async (data: DishFormData) => {
         try {
             if (selectedDish) {
-                // UPDATE
                 await handleUpdateDish(selectedDish.id, data);
             } else {
-                // CREATE
                 await handleAddDish(data);
             }
 
             setIsModalOpen(false);
             setSelectedDish(null);
 
-            // load lại danh sách
             await fetchDishes();
         } catch (error) {
             console.error("Lưu món ăn thất bại:", error);
         }
     };
 
-    const filteredDishes = [];
-    // const filteredDishes = useMemo(() => {
-    //     const keyword = search.toLowerCase().trim();
+    /**
+     * Filter danh sách món ăn
+     */
+    const filteredDishes = useMemo(() => {
+        const keyword = removeVietnameseTones(search);
 
-    //     return dishes.filter((dish) => {
-    //         const matchesSearch = !keyword || dish.nameVi.toLowerCase().includes(keyword) || dish.nameEn.toLowerCase().includes(keyword) || dish.id.toLowerCase().includes(keyword);
-
-    //         const matchesStatus = status === "all" || dish.status === status;
-
-    //         return matchesSearch && matchesStatus;
-    //     });
-    // }, [search, status]);
-
-    const fetchDishes = async () => {
-        try {
-            const data = await getDishes();
-            setDishes(data);
-        } catch (error) {
-            console.error("Error fetching dishes:", error);
+        if (!keyword) {
+            return dishes;
         }
-    };
 
-    useEffect(() => {
-        fetchDishes();
-        return;
-    }, []);
+        return dishes.filter((dish) => {
+            const nameVi = removeVietnameseTones(dish.nameVi);
+
+            const nameEn = removeVietnameseTones(dish.nameEn);
+
+            const id = String(dish.id);
+
+            return nameVi.includes(keyword) || nameEn.includes(keyword) || id.includes(keyword);
+        });
+    }, [dishes, search]);
 
     return (
         <div className="space-y-6">
-            {/* Header */}
+            {/* =========================
+                Header
+            ========================= */}
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">Món ăn</h1>
@@ -100,60 +229,20 @@ export default function DishesPage() {
                 </div>
 
                 <button
-                    onClick={() => setIsModalOpen(true)}
                     type="button"
-                    className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 text-sm font-medium text-white transition hover:bg-emerald-700"
+                    onClick={handleOpenAddModal}
+                    className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 text-sm font-medium text-white transition hover:bg-emerald-700 cursor-pointer"
                 >
                     <span className="text-lg">+</span>
                     Thêm món ăn
                 </button>
             </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                <Card className="rounded-xl border border-gray-200 shadow-sm">
-                    <Card.Content className="p-5">
-                        <p className="text-sm text-gray-500">Tổng món ăn</p>
-
-                        <p className="mt-2 text-2xl font-bold text-gray-900">{dishes.length}</p>
-
-                        <p className="mt-1 text-xs text-gray-500">Tất cả món ăn</p>
-                    </Card.Content>
-                </Card>
-
-                <Card className="rounded-xl border border-gray-200 shadow-sm">
-                    <Card.Content className="p-5">
-                        <p className="text-sm text-gray-500">Đang bán</p>
-
-                        <p className="mt-2 text-2xl font-bold text-emerald-600">8</p>
-
-                        <p className="mt-1 text-xs text-gray-500">Món đang có sẵn</p>
-                    </Card.Content>
-                </Card>
-
-                <Card className="rounded-xl border border-gray-200 shadow-sm">
-                    <Card.Content className="p-5">
-                        <p className="text-sm text-gray-500">Ngừng bán</p>
-
-                        <p className="mt-2 text-2xl font-bold text-red-600">8</p>
-
-                        <p className="mt-1 text-xs text-gray-500">Món tạm ngừng</p>
-                    </Card.Content>
-                </Card>
-
-                <Card className="rounded-xl border border-gray-200 shadow-sm">
-                    <Card.Content className="p-5">
-                        <p className="text-sm text-gray-500">Calories trung bình</p>
-
-                        <p className="mt-2 text-2xl font-bold text-gray-900">8</p>
-
-                        <p className="mt-1 text-xs text-gray-500">kcal / món</p>
-                    </Card.Content>
-                </Card>
-            </div>
-
-            {/* Main */}
+            {/* =========================
+                Main Card
+            ========================= */}
             <Card className="overflow-hidden rounded-xl border border-gray-200 shadow-sm">
+                {/* Card Header */}
                 <Card.Header className="border-b border-gray-100 p-5">
                     <Card.Title className="text-lg font-semibold text-gray-900">Danh sách món ăn</Card.Title>
 
@@ -161,61 +250,57 @@ export default function DishesPage() {
                 </Card.Header>
 
                 <Card.Content className="p-0">
-                    {/* Filters */}
-                    <div className="grid grid-cols-1 gap-4 border-b border-gray-100 p-5 md:grid-cols-[1fr_220px]">
+                    {/* =========================
+                        Filters
+                    ========================= */}
+                    <div className="grid grid-cols-1 gap-4 border-b border-gray-100 p-5">
                         <TextField>
                             <Label>Tìm kiếm món ăn</Label>
 
                             <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Tìm theo tên món hoặc mã món..." className="w-full" />
                         </TextField>
-
-                        <Select value={status} onChange={() => setStatus} className="w-full">
-                            <Label>Trạng thái</Label>
-
-                            <Select.Trigger>
-                                <Select.Value />
-                                <Select.Indicator />
-                            </Select.Trigger>
-
-                            <Select.Popover>
-                                <ListBox>
-                                    <ListBox.Item id="all" textValue="Tất cả">
-                                        Tất cả
-                                        <ListBox.ItemIndicator />
-                                    </ListBox.Item>
-
-                                    <ListBox.Item id="available" textValue="Đang bán">
-                                        Đang bán
-                                        <ListBox.ItemIndicator />
-                                    </ListBox.Item>
-
-                                    <ListBox.Item id="unavailable" textValue="Ngừng bán">
-                                        Ngừng bán
-                                        <ListBox.ItemIndicator />
-                                    </ListBox.Item>
-                                </ListBox>
-                            </Select.Popover>
-                        </Select>
                     </div>
 
-                    {/* Grid */}
-                    {dishes.length === 0 ? (
+                    {/* =========================
+                        Loading
+                    ========================= */}
+                    {isLoading ? (
+                        <div className="grid grid-cols-1 gap-5 p-5 sm:grid-cols-2 xl:grid-cols-3">
+                            {Array.from({
+                                length: 6,
+                            }).map((_, index) => (
+                                <DishCardSkeleton key={index} />
+                            ))}
+                        </div>
+                    ) : filteredDishes.length === 0 ? (
+                        /* =========================
+                            Empty
+                        ========================= */
                         <div className="px-5 py-16 text-center">
                             <p className="text-sm font-medium text-gray-900">Không tìm thấy món ăn</p>
 
-                            <p className="mt-1 text-sm text-gray-500">Thử thay đổi từ khóa hoặc bộ lọc.</p>
+                            <p className="mt-1 text-sm text-gray-500">{search ? "Thử thay đổi từ khóa tìm kiếm." : "Chưa có món ăn nào trong hệ thống."}</p>
                         </div>
                     ) : (
+                        /* =========================
+                            Grid
+                        ========================= */
                         <div className="grid grid-cols-1 gap-5 p-5 sm:grid-cols-2 xl:grid-cols-3">
-                            {dishes.map((dish) => (
+                            {filteredDishes.map((dish) => (
                                 <Card key={dish.id} className="group overflow-hidden rounded-xl border border-gray-200 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
                                     {/* Image */}
                                     <div className="relative aspect-[16/10] overflow-hidden bg-gray-100">
-                                        <img src={dish.image} alt={dish.nameVi} className="h-full w-full object-cover transition duration-300 group-hover:scale-105" />
+                                        {dish.image ? (
+                                            <img src={dish.image} alt={dish.nameVi} className="h-full w-full object-cover transition duration-300 group-hover:scale-105" />
+                                        ) : (
+                                            <div className="flex h-full items-center justify-center text-sm text-gray-400">Chưa có hình ảnh</div>
+                                        )}
 
-                                        <div className="absolute right-3 top-3 rounded-lg bg-black/60 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-sm">{dish.id}</div>
+                                        {/* ID */}
+                                        <div className="absolute right-3 top-3 rounded-lg bg-black/60 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-sm">#{dish.id}</div>
                                     </div>
 
+                                    {/* Content */}
                                     <Card.Content className="p-4">
                                         {/* Name */}
                                         <div className="flex items-start justify-between gap-3">
@@ -228,31 +313,20 @@ export default function DishesPage() {
 
                                         {/* Description */}
                                         <p className="mt-3 line-clamp-2 text-sm leading-5 text-gray-500">{dish.descriptionVi}</p>
-
-                                        {/* Nutrition */}
-                                        {/* <div className="mt-4 grid grid-cols-4 gap-2">
-                                            <NutritionItem label="Calories" value={`${dish.calories} kcal`} />
-
-                                            <NutritionItem label="Protein" value={`${dish.protein}g`} />
-
-                                            <NutritionItem label="Carbs" value={`${dish.carbs}g`} />
-
-                                            <NutritionItem label="Fat" value={`${dish.fat}g`} />
-                                        </div> */}
                                     </Card.Content>
 
-                                    {/* Actions */}
+                                    {/* Footer */}
                                     <Card.Footer className="border-t border-gray-100 p-3">
                                         <div className="flex w-full items-center justify-between">
                                             <span className="text-xs text-gray-400">Tạo ngày {formatDate(dish.createdAt)}</span>
 
                                             <div className="flex items-center gap-3">
-                                                <button onClick={() => handleEdit(dish)} type="button" className="text-sm font-medium text-gray-600 hover:text-gray-900 cursor-pointer">
+                                                <button type="button" onClick={() => handleEdit(dish)} className="cursor-pointer text-sm font-medium text-emerald-600 hover:text-emerald-700">
                                                     Sửa
                                                 </button>
 
-                                                <button type="button" className="text-sm font-medium text-emerald-600 hover:text-emerald-700 cursor-pointer">
-                                                    Chi tiết
+                                                <button type="button" onClick={handleRemove} className="cursor-pointer text-sm font-medium text-danger ">
+                                                    Xóa
                                                 </button>
                                             </div>
                                         </div>
@@ -262,27 +336,25 @@ export default function DishesPage() {
                         </div>
                     )}
 
-                    {/* Footer */}
+                    {/* =========================
+                        Footer
+                    ========================= */}
                     <div className="border-t border-gray-100 px-5 py-4">
-                        <p className="text-sm text-gray-500">
-                            Hiển thị <span className="font-medium text-gray-900">{filteredDishes.length}</span> / {dishes.length} món ăn
-                        </p>
+                        {isLoading ? (
+                            <div className="h-4 w-32 animate-pulse rounded bg-gray-200" />
+                        ) : (
+                            <p className="text-sm text-gray-500">
+                                Hiển thị <span className="font-medium text-gray-900">{filteredDishes.length}</span> / {dishes.length} món ăn
+                            </p>
+                        )}
                     </div>
                 </Card.Content>
             </Card>
 
-            <AddDishModal
-                isOpen={isModalOpen}
-                onOpenChange={(open) => {
-                    setIsModalOpen(open);
-
-                    if (!open) {
-                        setSelectedDish(null);
-                    }
-                }}
-                dish={selectedDish}
-                onSubmit={handleSubmitDish}
-            />
+            {/* =========================
+                Dish Modal
+            ========================= */}
+            <DishModal key={selectedDish?.id ?? "new"} isOpen={isModalOpen} onOpenChange={handleModalOpenChange} dish={selectedDish} onSubmit={handleSubmitDish} />
         </div>
     );
 }
