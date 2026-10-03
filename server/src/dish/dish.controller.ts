@@ -44,10 +44,7 @@ export class DishController {
     @Body() createDishDto: CreateDishDto,
     @UploadedFile() image?: Express.Multer.File,
   ) {
-    return this.dishService.create(
-      createDishDto,
-      image,
-    );
+    return this.dishService.create(createDishDto, image);
   }
 
   @Patch(':id')
@@ -59,5 +56,11 @@ export class DishController {
     @UploadedFile() image?: Express.Multer.File,
   ) {
     return this.dishService.update(id, updateDishDto, image);
+  }
+
+  @Patch(':id/delete')
+  @UseGuards(AuthGuard('jwt'))
+  async delete(@Param('id', ParseIntPipe) id: number) {
+    return this.dishService.remove(id);
   }
 }

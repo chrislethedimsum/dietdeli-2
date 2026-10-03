@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { Card, Input, Label, TextField } from "@heroui/react";
-import { getDishes, addDish, updateDish } from "../../api/dishes.api";
+import { getDishes, addDish, updateDish, deleteDish } from "../../api/dishes.api";
 import { formatDate, removeVietnameseTones } from "../../utils";
 import DishModal from "./components/AddDishModal";
+import ConfirmModal from "./components/DeleteDishModal";
 
 type Dish = {
     id: number;
@@ -66,13 +67,31 @@ function DishCardSkeleton() {
 export default function DishesPage() {
     const [search, setSearch] = useState("");
 
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isDishModalOpen, setIsDishModalOpen] = useState(false);
 
     const [dishes, setDishes] = useState<Dish[]>([]);
 
     const [selectedDish, setSelectedDish] = useState<Dish | null>(null);
 
     const [isLoading, setIsLoading] = useState(true);
+
+    const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+
+    const [selectedDishId, setSelectedDishId] = useState<number | null>(null);
+
+    const handleDelete = async () => {
+        if (!selectedDishId) return;
+
+        setIsConfirmOpen(false);
+        setSelectedDishId(null);
+
+        try {
+            await deleteDish(selectedDishId);
+            await fetchDishes();
+        } catch (error) {
+            console.error("Error deleting dish:", error);
+        }
+    };
 
     /**
      * Lấy danh sách món ăn
@@ -126,29 +145,33 @@ export default function DishesPage() {
      */
     const handleEdit = (dish: Dish) => {
         setSelectedDish(dish);
-        setIsModalOpen(true);
+        setIsDishModalOpen(true);
     };
 
     /**
      * Mở modal xóa
      */
-    const handleRemove = () => {
-        alert("Xóa món ăn");
-    }
+
+    const handleDeleteClick = (dishId: number) => {
+        console.log('dishId',dishId);
+        
+        setSelectedDishId(dishId);
+        setIsConfirmOpen(true);
+    };
 
     /**
      * Mở modal thêm
      */
     const handleOpenAddModal = () => {
         setSelectedDish(null);
-        setIsModalOpen(true);
+        setIsDishModalOpen(true);
     };
 
     /**
      * Đóng modal
      */
     const handleModalOpenChange = (isOpen: boolean) => {
-        setIsModalOpen(isOpen);
+        setIsDishModalOpen(isOpen);
 
         if (!isOpen) {
             setSelectedDish(null);
@@ -186,7 +209,7 @@ export default function DishesPage() {
                 await handleAddDish(data);
             }
 
-            setIsModalOpen(false);
+            setIsDishModalOpen(false);
             setSelectedDish(null);
 
             await fetchDishes();
@@ -325,7 +348,7 @@ export default function DishesPage() {
                                                     Sửa
                                                 </button>
 
-                                                <button type="button" onClick={handleRemove} className="cursor-pointer text-sm font-medium text-danger ">
+                                                <button type="button" onClick={() => handleDeleteClick(dish.id)} className="cursor-pointer text-sm font-medium text-danger ">
                                                     Xóa
                                                 </button>
                                             </div>
@@ -354,7 +377,13 @@ export default function DishesPage() {
             {/* =========================
                 Dish Modal
             ========================= */}
-            <DishModal key={selectedDish?.id ?? "new"} isOpen={isModalOpen} onOpenChange={handleModalOpenChange} dish={selectedDish} onSubmit={handleSubmitDish} />
+            <DishModal key={selectedDish?.id ?? "new"} isOpen={isDishModalOpen} onOpenChange={handleModalOpenChange} dish={selectedDish} onSubmit={handleSubmitDish} />
+
+
+            {/* =========================
+                Confirm Modal
+            ========================= */}
+            <ConfirmModal isOpen={isConfirmOpen} onOpenChange={setIsConfirmOpen} onConfirm={handleDelete} />
         </div>
     );
 }

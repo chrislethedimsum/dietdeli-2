@@ -53,6 +53,7 @@ model Dish {
   descriptionVi String?     @map("description_vi")
   descriptionEn String?     @map("description_en")
   image         String?
+  isDeleted     Boolean     @default(false)
   createdAt     DateTime    @default(now()) @map("created_at")
   updatedAt     DateTime    @updatedAt @map("updated_at")
   menus         Menu[]

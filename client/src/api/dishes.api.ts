@@ -57,3 +57,9 @@ export const updateDish = async (id: number, data: AddDishData) => {
 
     return result.data;
 };
+
+export const deleteDish = async (id: number) => {
+    const result = await axiosClient.patch(`/dish/${id}/delete`);
+
+    return result.data;
+}
