@@ -96,7 +96,7 @@ export default function Register() {
 
       // 4. Chuyển thẳng sang trang thanh toán kèm dữ liệu đơn
       if (res.paymentInstructions) {
-        navigate("/payment", { state: { paymentInfo: res.paymentInstructions } });
+        navigate("/user/payment", { state: { paymentInfo: res.paymentInstructions } });
       } else {
         navigate("/");
       }
