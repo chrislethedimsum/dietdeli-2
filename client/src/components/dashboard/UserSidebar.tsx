@@ -1,7 +1,7 @@
 import { NavLink, useNavigate } from "react-router";
 import { useAuthStore } from "../../store/useAuthStore";
 import { authApi } from "../../api/auth";
-import { CreditCard } from "lucide-react";
+import { Broccoli } from "lucide-react";
 
 interface UserSidebarProps {
   isOpen: boolean;
@@ -30,9 +30,9 @@ const menuItems = [
     icon: "order",
   },
   {
-    label: "Payment",
-    path: "/user/payment",
-    icon: "payment",
+    label: "Quản lí gói ăn",
+    path: "/user/mealpackage",
+    icon: "mealpackage",
   },
 ];
 
@@ -75,8 +75,8 @@ function Icon({ type }: { type: string }) {
         </svg>
       );
 
-    case "payment":
-      return <CreditCard />;
+    case "mealpackage":
+      return <Broccoli />;
 
     default:
       return null;

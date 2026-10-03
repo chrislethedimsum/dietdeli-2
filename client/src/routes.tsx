@@ -16,6 +16,7 @@ import { useAuthStore } from "./store/useAuthStore";
 import Register from "./pages/Register";
 import ConsultationRoute from "./components/auth/ConsultationRoute";
 import PaymentPage from "./pages/user/PaymentPage";
+import MealPackagePage from "./pages/user/MealPackagePage";
 
 const requireAuth = (Component: React.ComponentType) => {
   return (props: React.ComponentProps<React.ComponentType>) => {
@@ -73,18 +74,9 @@ export const router = createBrowserRouter([
       { index: true, Component: UserDashboardPage },
       { path: "payment", Component: PaymentPage },
       { path: "payment/:id", Component: PaymentPage },
+      { path: "mealpackage", Component: MealPackagePage },
     ],
   },
-  // Alias tiện lợi: /payment -> /user/payment
-  {
-    path: "/payment",
-    Component: () => <Navigate to="/user/payment" replace />,
-  },
-  {
-    path: "/payment/:id",
-    Component: () => <Navigate to="/user/payment" replace />,
-  },
-
   // 4. Nhóm Admin (Bảo vệ bởi requireAdmin)
   {
     path: "/admin",
