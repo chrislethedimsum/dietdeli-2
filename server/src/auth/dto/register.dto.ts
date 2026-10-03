@@ -1,4 +1,10 @@
-import { IsEmail, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MinLength,
+} from 'class-validator';
 
 export class RegisterDto {
   @IsNotEmpty({ message: 'Tên không được để trống' })
@@ -19,4 +25,29 @@ export class RegisterDto {
   @IsOptional()
   @IsString()
   address?: string;
+
+  // Chỉ số cơ thể
+  @IsOptional()
+  gender?: string;
+
+  @IsOptional()
+  height?: number;
+
+  @IsOptional()
+  weight?: number;
+
+  @IsOptional()
+  goal?: string;
+
+  // 👉 Thông tin gói ăn khách chọn từ Báo giá
+  @IsOptional()
+  @IsString()
+  packageType?: string; // 'ngay' | 'tuan' | 'thang'
+
+  @IsOptional()
+  @IsString()
+  mealOption?: string; // '1_meal' | '2_meals'
+
+  @IsOptional()
+  calories?: number; // 400 | 600 | 800
 }

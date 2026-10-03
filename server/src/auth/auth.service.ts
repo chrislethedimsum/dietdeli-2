@@ -61,6 +61,7 @@ export class AuthService {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(dto.password, salt);
 
+    // 1. Tạo User
     const newUser = await this.prisma.user.create({
       data: {
         name: dto.name,
@@ -68,13 +69,96 @@ export class AuthService {
         password: hashedPassword,
         phone: dto.phone,
         address: dto.address || null,
+        // 👉 Lưu chỉ số sức khoẻ vào hồ sơ khách hàng:
+        gender: dto.gender || null,
+        height: dto.height ? Number(dto.height) : null,
+        weight: dto.weight ? Number(dto.weight) : null,
+        goal: dto.goal || null,
       },
     });
 
-    const { password: _password, ...result } = newUser;
+    // 2. Tìm gói ăn tương ứng trong Database và tạo Subscription (nếu có chọn gói)
+    let subscriptionData: any = null;
+    let paymentInstructions: any = null;
+    if (dto.packageType && dto.calories) {
+      // Ánh xạ tên: 'ngay' -> 'Ngày', 'tuan' -> 'Tuần', 'thang' -> 'Tháng'
+      const typeMap: Record<string, string> = {
+        ngay: 'Ngày',
+        tuan: 'Tuần',
+        thang: 'Tháng',
+      };
+      const typeName = typeMap[dto.packageType] || 'Tuần';
+      const meals = dto.mealOption === '1_meal' ? 1 : 2;
+      const targetName = `${typeName} ${meals} Bữa`; // Khớp với DB: "Tuần 2 Bữa", "Ngày 1 Bữa"...
+      // Tìm gói trong bảng meal_package
+      let mealPackage = await this.prisma.mealPackage.findFirst({
+        where: {
+          name: targetName,
+          caloriesPerMeal: dto.calories,
+          isActive: true,
+        },
+      });
+      // Dự phòng nếu không tìm thấy chính xác thì lấy gói cùng tên
+      if (!mealPackage) {
+        mealPackage = await this.prisma.mealPackage.findFirst({
+          where: { name: targetName },
+        });
+      }
+      if (mealPackage) {
+        const startDate = new Date();
+        const endDate = new Date(startDate);
+        endDate.setDate(endDate.getDate() + mealPackage.durationDays);
+        // Tạo bản ghi UserSubscription
+        const sub = await this.prisma.userSubscription.create({
+          data: {
+            idUser: newUser.id,
+            packageId: mealPackage.id,
+            startDate,
+            endDate,
+            paymentStatus: 'UNPAID',
+            remainingMeals: mealPackage.totalMeals,
+          },
+          include: {
+            package: true,
+          },
+        });
+        subscriptionData = sub;
+        // Cấu hình thông tin chuyển khoản VietQR
+        const bankAccount = '0389150399';
+        const bankCode = 'MB'; // MBBank
+        const accountName = 'NGUYEN VIET CHINH';
+        const transferContent = `DIETDELI ${sub.id}`;
+        const amount = mealPackage.price;
+
+        // Link sinh QR động chuẩn VietQR
+        const qrUrl = `https://img.vietqr.io/image/${bankCode}-${bankAccount}-compact2.png?amount=${amount}&addInfo=${encodeURIComponent(transferContent)}&accountName=${encodeURIComponent(accountName)}`;
+        paymentInstructions = {
+          subscriptionId: sub.id,
+          packageName: mealPackage.name,
+          calories: mealPackage.caloriesPerMeal,
+          amount,
+          bankAccount,
+          bankCode,
+          accountName,
+          transferContent,
+          qrUrl,
+        };
+      }
+    }
+
+    // 3. Tự động sinh Token đăng nhập cho khách
+    const tokens = await this.generateTokens(newUser);
+    await this.prisma.user.update({
+      where: { id: newUser.id },
+      data: { refreshToken: tokens.refreshToken },
+    });
+    const { password: _p, refreshToken: _r, ...userInfo } = newUser;
     return {
-      message: 'Đăng ký tài khoản thành công',
-      user: result,
+      message: 'Đăng ký tài khoản và đặt gói ăn thành công',
+      ...tokens,
+      user: userInfo,
+      subscription: subscriptionData,
+      paymentInstructions,
     };
   }
 

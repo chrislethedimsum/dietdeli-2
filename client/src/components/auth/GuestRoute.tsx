@@ -6,6 +6,10 @@ export default function GuestRoute() {
 
   // Đã đăng nhập rồi thì không cho ở lại trang /login nữa:
   if (isAuthenticated) {
+    // Nếu có đơn hàng vừa tạo cần thanh toán -> ưu tiên chuyển đến /payment
+    if (sessionStorage.getItem("dietdeli_payment")) {
+      return <Navigate to="/payment" replace />;
+    }
     return <Navigate to={isAdmin ? "/admin" : "/"} replace />;
   }
 

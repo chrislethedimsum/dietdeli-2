@@ -11,6 +11,9 @@ import OrdersPage from "./pages/OrdersPage";
 import DishesPage from "./pages/DishesPage";
 import MenuPage from "./pages/MenuPage";
 import { useAuthStore } from "./store/useAuthStore";
+import Register from "./pages/Register";
+import ConsultationRoute from "./components/auth/ConsultationRoute";
+import PaymentPage from "./pages/PaymentPage";
 
 const requireAdmin = (Component: React.ComponentType) => {
   return (props: React.ComponentProps<React.ComponentType>) => {
@@ -40,10 +43,29 @@ export const router = createBrowserRouter([
         path: "/login",
         Component: Login,
       },
+      // Nhóm cần có thông tin tư vấn mới được vào
+      {
+        Component: ConsultationRoute,
+        children: [
+          {
+            path: "/register",
+            Component: Register,
+          },
+        ],
+      },
     ],
   },
+  // 3. Nhóm User (Bảo vệ bởi requireAuth)
+  {
+    path: "/payment",
+    Component: PaymentPage,
+  },
+  {
+    path: "/payment/:id",
+    Component: PaymentPage,
+  },
 
-  // 3. Nhóm Admin (Bảo vệ bởi requireAdmin)
+  // 4. Nhóm Admin (Bảo vệ bởi requireAdmin)
   {
     path: "/admin",
     Component: requireAdmin(AdminLayout),

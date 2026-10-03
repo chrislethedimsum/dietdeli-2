@@ -20,7 +20,7 @@ export class SubscriptionController {
 
   // 👉 1. POST /api/subscriptions/checkout (Khách hàng tạo đơn mua gói)
   @Post('checkout')
-  @UseGuards(JwtAuthGuard, AdminGuard)
+  @UseGuards(JwtAuthGuard)
   async checkout(@Req() req: any, @Body() dto: CheckoutSubscriptionDto) {
     const userId = req.user.id || req.user.userId;
     return this.subscriptionService.checkout(userId, dto);
@@ -39,7 +39,7 @@ export class SubscriptionController {
 
   // 👉 3. GET /api/subscriptions/my-subscriptions (Khách xem các gói đã mua của mình)
   @Get('my-subscriptions')
-  @UseGuards(JwtAuthGuard, AdminGuard)
+  @UseGuards(JwtAuthGuard)
   async getMySubscriptions(@Req() req: any) {
     const userId = req.user.id || req.user.userId;
     return this.subscriptionService.getUserSubscriptions(userId);
