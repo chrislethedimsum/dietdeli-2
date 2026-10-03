@@ -1,18 +1,7 @@
 import { useNavigate, Link } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardHeader, Table, Button, Chip, Avatar } from "@heroui/react";
-import {
-  Calendar,
-  CreditCard,
-  RefreshCw,
-  Plus,
-  UtensilsCrossed,
-  Sparkles,
-  Flame,
-  CheckCircle2,
-  Clock,
-  ArrowRight,
-} from "lucide-react";
+import { Calendar, CreditCard, RefreshCw, Plus, UtensilsCrossed, Sparkles, Flame, CheckCircle2, Clock, ArrowRight } from "lucide-react";
 import { subscriptionApi, type UserSubscription } from "../../api/subscription.api";
 
 function getPaymentStatusBadge(status: string) {
@@ -76,7 +65,7 @@ export default function MealPackagePage() {
     const transferContent = `DIETDELI ${sub.id}`;
     const amount = sub.package.price;
     const qrUrl = `https://img.vietqr.io/image/${bankCode}-${bankAccount}-compact2.png?amount=${amount}&addInfo=${encodeURIComponent(
-      transferContent
+      transferContent,
     )}&accountName=${encodeURIComponent(accountName)}`;
 
     const paymentInfo = {
@@ -95,12 +84,15 @@ export default function MealPackagePage() {
     navigate("/user/payment", { state: { paymentInfo } });
   };
 
-  // 3. Thống kê nhanh
+  // 3. Đăng ký gói mới
+  const handleRegisterNewPackage = () => {
+    navigate("/user/registerpackage");
+  };
+
+  // 4. Thống kê nhanh
   const activeSub = subscriptions.find((s) => s.paymentStatus === "PAID");
   const unpaidCount = subscriptions.filter((s) => s.paymentStatus === "UNPAID").length;
-  const totalMealsLeft = subscriptions
-    .filter((s) => s.paymentStatus === "PAID")
-    .reduce((acc, curr) => acc + curr.remainingMeals, 0);
+  const totalMealsLeft = subscriptions.filter((s) => s.paymentStatus === "PAID").reduce((acc, curr) => acc + curr.remainingMeals, 0);
 
   return (
     <div className="space-y-6">
@@ -108,9 +100,7 @@ export default function MealPackagePage() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-gray-900">Gói ăn của tôi</h1>
-          <p className="mt-1 text-sm text-gray-500">
-            Theo dõi trạng thái các gói dinh dưỡng đã đăng ký và tiến trình các bữa ăn của bạn.
-          </p>
+          <p className="mt-1 text-sm text-gray-500">Theo dõi trạng thái các gói dinh dưỡng đã đăng ký và tiến trình các bữa ăn của bạn.</p>
         </div>
 
         <div className="flex items-center gap-2">
@@ -128,7 +118,7 @@ export default function MealPackagePage() {
           <Button
             size="sm"
             className="flex items-center gap-1.5 bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm"
-            onClick={() => navigate("/baogia")}
+            onClick={() => handleRegisterNewPackage()}
           >
             <Plus size={16} />
             <span>Đăng ký gói mới</span>
@@ -148,9 +138,7 @@ export default function MealPackagePage() {
               </div>
             </div>
             <div className="mt-3">
-              <p className="truncate text-lg font-bold text-gray-900">
-                {activeSub ? activeSub.package.name : "Chưa kích hoạt"}
-              </p>
+              <p className="truncate text-lg font-bold text-gray-900">{activeSub ? activeSub.package.name : "Chưa kích hoạt"}</p>
               <p className="mt-0.5 text-xs text-gray-500">
                 {activeSub ? `${activeSub.package.caloriesPerMeal} kcal/bữa` : "Đăng ký để bắt đầu bữa ăn"}
               </p>
@@ -260,10 +248,10 @@ export default function MealPackagePage() {
                 Hãy lựa chọn gói ăn phù hợp với nhu cầu calo và mục tiêu sức khỏe của bạn để bắt đầu nhận bữa ăn thơm ngon mỗi ngày!
               </p>
               <Link
-                to="/baogia"
+                to="/user/registerpackage"
                 className="mt-5 inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-xs font-semibold text-white shadow-sm hover:bg-emerald-700 transition"
               >
-                <span>Khám phá các gói ăn ngay</span>
+                <span>Khám phá & Đăng ký gói ăn ngay</span>
                 <ArrowRight size={14} />
               </Link>
             </div>
@@ -305,10 +293,7 @@ export default function MealPackagePage() {
                         {subscriptions.map((sub) => {
                           const badge = getPaymentStatusBadge(sub.paymentStatus);
                           const totalMeals = sub.package.totalMeals || 1;
-                          const progress = Math.min(
-                            100,
-                            Math.max(0, Math.round(((totalMeals - sub.remainingMeals) / totalMeals) * 100))
-                          );
+                          const progress = Math.min(100, Math.max(0, Math.round(((totalMeals - sub.remainingMeals) / totalMeals) * 100)));
 
                           return (
                             <Table.Row key={sub.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition">
@@ -352,9 +337,7 @@ export default function MealPackagePage() {
                                   </div>
                                   <div className="h-1.5 w-full rounded-full bg-gray-100 overflow-hidden">
                                     <div
-                                      className={`h-full rounded-full ${
-                                        sub.paymentStatus === "PAID" ? "bg-emerald-500" : "bg-gray-300"
-                                      }`}
+                                      className={`h-full rounded-full ${sub.paymentStatus === "PAID" ? "bg-emerald-500" : "bg-gray-300"}`}
                                       style={{ width: `${sub.paymentStatus === "PAID" ? 100 - progress : 0}%` }}
                                     />
                                   </div>
@@ -399,7 +382,7 @@ export default function MealPackagePage() {
                                     size="sm"
                                     variant="ghost"
                                     className="text-xs text-emerald-700 border border-emerald-200 hover:bg-emerald-50 inline-flex items-center gap-1 cursor-pointer"
-                                    onClick={() => navigate("/baogia")}
+                                    onClick={() => navigate("/user/registerpackage")}
                                   >
                                     <CheckCircle2 size={13} className="text-emerald-600" />
                                     <span>Gia hạn gói</span>
@@ -420,10 +403,7 @@ export default function MealPackagePage() {
                 {subscriptions.map((sub) => {
                   const badge = getPaymentStatusBadge(sub.paymentStatus);
                   const totalMeals = sub.package.totalMeals || 1;
-                  const progress = Math.min(
-                    100,
-                    Math.max(0, Math.round(((totalMeals - sub.remainingMeals) / totalMeals) * 100))
-                  );
+                  const progress = Math.min(100, Math.max(0, Math.round(((totalMeals - sub.remainingMeals) / totalMeals) * 100)));
 
                   return (
                     <div
@@ -453,9 +433,7 @@ export default function MealPackagePage() {
                             <span className="text-[11px] text-gray-400">({sub.package.durationDays} ngày)</span>
                           </div>
                         </div>
-                        <span className="text-sm font-extrabold text-gray-900">
-                          {sub.package.price?.toLocaleString("vi-VN")} ₫
-                        </span>
+                        <span className="text-sm font-extrabold text-gray-900">{sub.package.price?.toLocaleString("vi-VN")} ₫</span>
                       </div>
 
                       {/* Progress bar */}
@@ -468,9 +446,7 @@ export default function MealPackagePage() {
                         </div>
                         <div className="h-1.5 w-full rounded-full bg-gray-200 overflow-hidden">
                           <div
-                            className={`h-full rounded-full ${
-                              sub.paymentStatus === "PAID" ? "bg-emerald-500" : "bg-gray-400"
-                            }`}
+                            className={`h-full rounded-full ${sub.paymentStatus === "PAID" ? "bg-emerald-500" : "bg-gray-400"}`}
                             style={{ width: `${sub.paymentStatus === "PAID" ? 100 - progress : 0}%` }}
                           />
                         </div>
@@ -501,7 +477,7 @@ export default function MealPackagePage() {
                           <Button
                             variant="ghost"
                             className="w-full text-xs text-emerald-700 border border-emerald-200 hover:bg-emerald-50 py-2 rounded-xl flex items-center justify-center gap-1.5 cursor-pointer"
-                            onClick={() => navigate("/baogia")}
+                            onClick={() => navigate("/user/registerpackage")}
                           >
                             <CheckCircle2 size={14} className="text-emerald-600" />
                             <span>Gia hạn thêm gói</span>

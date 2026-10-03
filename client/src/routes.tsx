@@ -17,6 +17,7 @@ import Register from "./pages/Register";
 import ConsultationRoute from "./components/auth/ConsultationRoute";
 import PaymentPage from "./pages/user/PaymentPage";
 import MealPackagePage from "./pages/user/MealPackagePage";
+import RegisterMealPackagePage from "./pages/user/RegisterMealPackagePage";
 
 const requireAuth = (Component: React.ComponentType) => {
   return (props: React.ComponentProps<React.ComponentType>) => {
@@ -75,6 +76,7 @@ export const router = createBrowserRouter([
       { path: "payment", Component: PaymentPage },
       { path: "payment/:id", Component: PaymentPage },
       { path: "mealpackage", Component: MealPackagePage },
+      { path: "registerpackage", Component: RegisterMealPackagePage },
     ],
   },
   // 4. Nhóm Admin (Bảo vệ bởi requireAdmin)

@@ -40,14 +40,30 @@ export class SubscriptionService {
     });
 
     // d. Dùng chính subscription.id làm mã đơn / cú pháp chuyển khoản
+    const bankAccount = '0389150399';
+    const bankCode = 'MB'; // MBBank
+    const accountName = 'NGUYEN VIET CHINH';
+    const transferContent = `DIETDELI ${subscription.id}`;
+    const amount = mealPackage.price;
+    const qrUrl = `https://img.vietqr.io/image/${bankCode}-${bankAccount}-compact2.png?amount=${amount}&addInfo=${encodeURIComponent(
+      transferContent,
+    )}&accountName=${encodeURIComponent(accountName)}`;
+
     return {
       message: 'Đặt gói thành công. Vui lòng chuyển khoản để kích hoạt gói ăn.',
       subscription,
       paymentInstructions: {
         method: 'BANK_TRANSFER',
-        amount: mealPackage.price,
+        subscriptionId: subscription.id,
+        packageName: mealPackage.name,
+        calories: mealPackage.caloriesPerMeal,
+        amount,
+        bankAccount,
+        bankCode,
+        accountName,
+        transferContent,
+        qrUrl,
         orderId: subscription.id,
-        transferContent: `DIETDELI ${subscription.id}`, // Khách ghi: DIETDELI <id>
         note: 'Gói ăn sẽ được kích hoạt sau khi quản trị viên xác nhận chuyển khoản thành công.',
       },
     };

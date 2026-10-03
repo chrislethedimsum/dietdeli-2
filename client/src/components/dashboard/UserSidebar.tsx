@@ -15,24 +15,19 @@ const menuItems = [
     icon: "dashboard",
   },
   {
-    label: "Menu",
-    path: "/admin/menu",
-    icon: "menu",
-  },
-  {
-    label: "Dishes",
-    path: "/admin/dishes",
-    icon: "dish",
-  },
-  {
-    label: "Orders",
-    path: "/admin/orders",
-    icon: "order",
-  },
-  {
-    label: "Quản lí gói ăn",
+    label: "Gói ăn của tôi",
     path: "/user/mealpackage",
     icon: "mealpackage",
+  },
+  {
+    label: "Đăng ký gói mới",
+    path: "/user/registerpackage",
+    icon: "plus",
+  },
+  {
+    label: "Bảng giá & Thực đơn",
+    path: "/baogia",
+    icon: "menu",
   },
 ];
 
@@ -78,6 +73,13 @@ function Icon({ type }: { type: string }) {
     case "mealpackage":
       return <Broccoli />;
 
+    case "plus":
+      return (
+        <svg {...common}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+        </svg>
+      );
+
     default:
       return null;
   }
@@ -119,7 +121,7 @@ export default function UserSidebar({ isOpen, onClose }: UserSidebarProps) {
           <div>
             <h1 className="text-lg font-bold text-gray-900">DietDeli</h1>
 
-            <p className="text-[10px] uppercase tracking-wider text-gray-400">Admin</p>
+            <p className="text-[10px] uppercase tracking-wider text-gray-400">Thành viên</p>
           </div>
         </div>
 

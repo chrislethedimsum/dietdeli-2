@@ -25,14 +25,38 @@ export interface UserSubscription {
   package: MealPackage;
 }
 
+export interface CheckoutResponse {
+  message: string;
+  subscription: UserSubscription;
+  paymentInstructions: {
+    method: string;
+    subscriptionId: number;
+    packageName: string;
+    calories: number;
+    amount: number;
+    bankAccount: string;
+    bankCode: string;
+    accountName: string;
+    transferContent: string;
+    qrUrl: string;
+    orderId: number;
+    note: string;
+  };
+}
+
 export const subscriptionApi = {
   getMySubscriptions: async (): Promise<UserSubscription[]> => {
     const response = await axiosClient.get<UserSubscription[]>("/subscriptions/my-subscriptions");
     return response.data;
   },
 
-  checkout: async (data: { packageId: number; startDate?: string }) => {
-    const response = await axiosClient.post("/subscriptions/checkout", data);
+  getAllPlans: async (): Promise<MealPackage[]> => {
+    const response = await axiosClient.get<MealPackage[]>("/plans");
+    return response.data;
+  },
+
+  checkout: async (data: { packageId: number; startDate?: string }): Promise<CheckoutResponse> => {
+    const response = await axiosClient.post<CheckoutResponse>("/subscriptions/checkout", data);
     return response.data;
   },
 };
