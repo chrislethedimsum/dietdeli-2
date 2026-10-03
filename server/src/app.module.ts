@@ -7,6 +7,7 @@ import { PrismaModule } from './prisma/prisma.module.js';
 import { PlansModule } from './plans/plans.module.js';
 import { DishModule } from './dish/dish.module.js';
 import { SubscriptionModule } from './subscription/subscription.module.js';
+import { UploadModule } from './upload/upload.module.js';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { SubscriptionModule } from './subscription/subscription.module.js';
     PlansModule,
     DishModule,
     SubscriptionModule,
+    UploadModule
   ],
   controllers: [AppController],
   providers: [AppService],

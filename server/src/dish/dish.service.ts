@@ -2,10 +2,15 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateDishDto } from './dto/createDish.dto.js';
 import { UpdateDishDto } from './dto/updateDish.dto.js';
+import { UploadService } from '../upload/upload.service.js';
+import { log } from 'console';
 
 @Injectable()
 export class DishService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly uploadService: UploadService,
+  ) {}
 
   async findAll() {
     return this.prisma.dish.findMany({
@@ -24,14 +29,27 @@ export class DishService {
 
     return dish;
   }
+  async create(createDishDto: CreateDishDto, image?: Express.Multer.File) {
+    let imageUrl: string | null = null;
 
-  async create(createDishDto: CreateDishDto) {
+    if (image) {
+      imageUrl = await this.uploadService.uploadImage(image, 'dietdeli/dish');
+      console.log('imageUrl:', imageUrl);
+    }
+
     return this.prisma.dish.create({
-      data: createDishDto,
+      data: {
+        ...createDishDto,
+        image: imageUrl,
+      },
     });
   }
 
-  async update(id: number, updateDishDto: UpdateDishDto) {
+  async update(
+    id: number,
+    updateDishDto: UpdateDishDto,
+    image?: Express.Multer.File,
+  ) {
     const dishExists = await this.prisma.dish.findUnique({
       where: { id },
     });
@@ -40,9 +58,14 @@ export class DishService {
       throw new NotFoundException(`Không tìm thấy món ăn với ID ${id}`);
     }
 
+    let imageUrl: string | null = dishExists.image;
+    if (image) {
+      imageUrl = await this.uploadService.uploadImage(image, 'dietdeli/dish');
+    }
+
     return this.prisma.dish.update({
       where: { id },
-      data: updateDishDto,
+      data: { ...updateDishDto, image: imageUrl },
     });
   }
 }
