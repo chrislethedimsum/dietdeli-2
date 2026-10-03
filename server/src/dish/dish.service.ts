@@ -14,13 +14,14 @@ export class DishService {
 
   async findAll() {
     return this.prisma.dish.findMany({
+      where: { isDeleted: false },
       orderBy: { id: 'asc' },
     });
   }
 
   async findOne(id: number) {
     const dish = await this.prisma.dish.findUnique({
-      where: { id },
+      where: { id, isDeleted: false },
     });
 
     if (!dish) {
@@ -34,7 +35,6 @@ export class DishService {
 
     if (image) {
       imageUrl = await this.uploadService.uploadImage(image, 'dietdeli/dish');
-      console.log('imageUrl:', imageUrl);
     }
 
     return this.prisma.dish.create({
@@ -66,6 +66,21 @@ export class DishService {
     return this.prisma.dish.update({
       where: { id },
       data: { ...updateDishDto, image: imageUrl },
+    });
+  }
+
+  async remove(id: number) {
+    const dishExists = await this.prisma.dish.findUnique({
+      where: { id },
+    });
+
+    if (!dishExists) {
+      throw new NotFoundException(`Không tìm thấy món ăn với ID ${id}`);
+    }
+
+    return this.prisma.dish.update({
+      where: { id },
+      data: { ...dishExists, isDeleted: true },
     });
   }
 }

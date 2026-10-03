@@ -10,7 +10,7 @@ import DashboardPage from "./pages/admin/DashboardPage";
 import UserDashboardPage from "./pages/user/UserDashboardPage";
 import CustomersPage from "./pages/admin/CustomersPage";
 import OrdersPage from "./pages/admin/OrdersPage";
-import DishesPage from "./pages/admin/DishesPage";
+import DishesPage from "@/pages/admin/DishesPage";
 import MenuPage from "./pages/admin/MenuPage";
 import { useAuthStore } from "./store/useAuthStore";
 import Register from "./pages/Register";
