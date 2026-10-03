@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Card, Input, Label, TextField } from "@heroui/react";
-import { getDishes, addDish, updateDish, deleteDish } from "../../api/dishes.api";
-import { formatDate, removeVietnameseTones } from "../../utils";
+import { getDishes, addDish, updateDish, deleteDish } from "@/api/dishes.api";
+import { formatDate, removeVietnameseTones } from "@/utils";
 import DishModal from "./components/AddDishModal";
 import ConfirmModal from "./components/DeleteDishModal";
 
@@ -153,8 +153,6 @@ export default function DishesPage() {
      */
 
     const handleDeleteClick = (dishId: number) => {
-        console.log('dishId',dishId);
-        
         setSelectedDishId(dishId);
         setIsConfirmOpen(true);
     };

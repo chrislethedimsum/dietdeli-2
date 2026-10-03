@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { Button, FieldError, Form, Input, Label, TextArea, TextField } from "@heroui/react";
-import CommonModal from "../../../components/common/CommonModal";
+import CommonModal from "@/components/common/CommonModal";
 
 type Dish = {
     id: number;

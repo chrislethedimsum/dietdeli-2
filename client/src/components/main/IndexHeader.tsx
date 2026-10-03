@@ -42,7 +42,7 @@ export default function IndexHeader({ pageTitle }: IndexHeaderProps) {
     "/quydinhthanhtoan": "Quy định hình thức thanh toán",
     "/chinhsachgiaohang": "Chính sách vận chuyển và giao hàng",
     "/baomatthongtin": "Chính sách bảo mật thông tin",
-    "/account": "Tài khoản của tôi",
+    "/user": "Tài khoản của tôi",
   };
 
   const displayTitle = pageTitle || routeTitles[location.pathname] || "Diet Deli";
@@ -138,10 +138,7 @@ export default function IndexHeader({ pageTitle }: IndexHeaderProps) {
               {/* User Account / Auth */}
               {user ? (
                 <div className="flex items-center gap-4 pl-4 border-l border-gray-200">
-                  <Link
-                    to="/account"
-                    className="flex items-center gap-1.5 text-sm font-medium text-gray-700 hover:text-orange-500 transition"
-                  >
+                  <Link to="/user" className="flex items-center gap-1.5 text-sm font-medium text-gray-700 hover:text-orange-500 transition">
                     <UserIcon size={18} className="text-orange-500" />
                     <span>{user.name || "Tài khoản"}</span>
                   </Link>
@@ -252,7 +249,7 @@ export default function IndexHeader({ pageTitle }: IndexHeaderProps) {
               {user ? (
                 <div className="space-y-2">
                   <Link
-                    to="/account"
+                    to="/user"
                     onClick={() => setIsMobileMenuOpen(false)}
                     className="flex items-center gap-2 px-3 py-2 rounded-lg text-base font-medium text-gray-800 hover:bg-gray-50"
                   >

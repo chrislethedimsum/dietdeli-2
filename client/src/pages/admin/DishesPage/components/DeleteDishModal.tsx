@@ -1,5 +1,5 @@
 import { Button } from "@heroui/react";
-import CommonModal from "../../../components/common/CommonModal";
+import CommonModal from "@/components/common/CommonModal";
 
 type ConfirmModalProps = {
     isOpen: boolean;
