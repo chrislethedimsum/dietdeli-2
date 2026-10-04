@@ -31,10 +31,7 @@ export default function RegisterMealPackagePage() {
   const consultationData = useConsultationStore((state) => state.consultationData);
 
   // 1. Fetch toàn bộ các gói ăn có sẵn từ backend
-  const {
-    data: plans = [],
-    isLoading: isLoadingPlans,
-  } = useQuery({
+  const { data: plans = [], isLoading: isLoadingPlans } = useQuery({
     queryKey: ["all-meal-plans"],
     queryFn: subscriptionApi.getAllPlans,
   });
@@ -69,7 +66,9 @@ export default function RegisterMealPackagePage() {
     return d.toISOString().split("T")[0];
   }, []);
   const [startDate, setStartDate] = useState(tomorrow);
-  const [shippingNote, setShippingNote] = useState("");
+  const [shippingPhone, setShippingPhone] = useState(user?.phone || "");
+  const [shippingAddress, setShippingAddress] = useState(user?.address || "");
+  const [userNote, setUserNote] = useState("");
 
   // Công cụ tính Calo / TDEE nhanh
   const [showCalculator, setShowCalculator] = useState(false);
@@ -110,9 +109,7 @@ export default function RegisterMealPackagePage() {
 
   const matchedPackage: MealPackage | undefined = useMemo(() => {
     if (!plans || plans.length === 0) return undefined;
-    return plans.find(
-      (p) => p.name === targetPackageName && p.caloriesPerMeal === calories && p.isActive
-    );
+    return plans.find((p) => p.name === targetPackageName && p.caloriesPerMeal === calories && p.isActive);
   }, [plans, targetPackageName, calories]);
 
   // Giá và chi tiết hiển thị dự phòng nếu database chưa seed xong
@@ -166,6 +163,9 @@ export default function RegisterMealPackagePage() {
     checkoutMutation.mutate({
       packageId: matchedPackage.id,
       startDate,
+      userNote,
+      planShippingAddress: shippingAddress,
+      planPhone: shippingPhone,
     });
   };
 
@@ -176,13 +176,9 @@ export default function RegisterMealPackagePage() {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-bold tracking-tight text-gray-900">Đăng ký gói ăn dinh dưỡng</h1>
-            <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-800">
-              Cá nhân hóa
-            </span>
+            <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-800">Cá nhân hóa</span>
           </div>
-          <p className="mt-1 text-sm text-gray-500">
-            Chọn lộ trình dinh dưỡng, số bữa và mức calo phù hợp với cơ thể bạn.
-          </p>
+          <p className="mt-1 text-sm text-gray-500">Chọn lộ trình dinh dưỡng, số bữa và mức calo phù hợp với cơ thể bạn.</p>
         </div>
 
         <Link
@@ -202,9 +198,7 @@ export default function RegisterMealPackagePage() {
           <Card className="border border-gray-100 shadow-sm">
             <CardHeader className="px-5 pt-5 pb-2">
               <div className="flex items-center gap-2.5">
-                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-600 text-xs font-bold text-white">
-                  1
-                </div>
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-600 text-xs font-bold text-white">1</div>
                 <h2 className="text-base font-bold text-gray-900">Chọn chu kỳ gói ăn</h2>
               </div>
             </CardHeader>
@@ -283,9 +277,7 @@ export default function RegisterMealPackagePage() {
           <Card className="border border-gray-100 shadow-sm">
             <CardHeader className="px-5 pt-5 pb-2">
               <div className="flex items-center gap-2.5">
-                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-600 text-xs font-bold text-white">
-                  2
-                </div>
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-600 text-xs font-bold text-white">2</div>
                 <h2 className="text-base font-bold text-gray-900">Số bữa ăn nhận mỗi ngày</h2>
               </div>
             </CardHeader>
@@ -333,9 +325,7 @@ export default function RegisterMealPackagePage() {
                     <div>
                       <div className="flex items-center gap-1.5">
                         <h3 className="text-sm font-bold text-gray-900">2 Bữa / ngày</h3>
-                        <span className="rounded bg-emerald-100 px-1.5 py-0.2 text-[10px] font-semibold text-emerald-700">
-                          Khuyên dùng
-                        </span>
+                        <span className="rounded bg-emerald-100 px-1.5 py-0.2 text-[10px] font-semibold text-emerald-700">Khuyên dùng</span>
                       </div>
                       <p className="text-xs text-gray-500">Trọn vẹn Trưa & Tối không lo nghĩ món</p>
                     </div>
@@ -355,9 +345,7 @@ export default function RegisterMealPackagePage() {
             <CardHeader className="px-5 pt-5 pb-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
-                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-600 text-xs font-bold text-white">
-                    3
-                  </div>
+                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-600 text-xs font-bold text-white">3</div>
                   <h2 className="text-base font-bold text-gray-900">Khẩu phần calo mỗi bữa</h2>
                 </div>
 
@@ -468,8 +456,8 @@ export default function RegisterMealPackagePage() {
 
                       {calcResult && (
                         <div className="text-xs text-emerald-800">
-                          Năng lượng mục tiêu: <span className="font-bold text-sm">{calcResult} kcal/ngày</span>. Đã
-                          chọn mức <span className="font-bold text-sm text-emerald-700">{calories} kcal</span> cho bạn!
+                          Năng lượng mục tiêu: <span className="font-bold text-sm">{calcResult} kcal/ngày</span>. Đã chọn mức{" "}
+                          <span className="font-bold text-sm text-emerald-700">{calories} kcal</span> cho bạn!
                         </div>
                       )}
                     </div>
@@ -561,9 +549,7 @@ export default function RegisterMealPackagePage() {
           <Card className="border border-gray-100 shadow-sm">
             <CardHeader className="px-5 pt-5 pb-2">
               <div className="flex items-center gap-2.5">
-                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-600 text-xs font-bold text-white">
-                  4
-                </div>
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-600 text-xs font-bold text-white">4</div>
                 <h2 className="text-base font-bold text-gray-900">Lịch nhận bữa ăn & Địa chỉ</h2>
               </div>
             </CardHeader>
@@ -592,22 +578,25 @@ export default function RegisterMealPackagePage() {
                   <label className="text-gray-700 font-semibold block mb-1.5">Số điện thoại liên hệ</label>
                   <input
                     type="text"
-                    disabled
-                    value={user?.phone || "Chưa cập nhật"}
-                    className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-xs text-gray-600"
+                    value={shippingPhone}
+                    onChange={(e) => setShippingPhone(e.target.value)}
+                    placeholder="Nhập số điện thoại nhận hàng"
+                    className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-xs text-gray-800 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                   />
                   <p className="mt-1 text-[11px] text-gray-400">Tài xế sẽ gọi điện trước khi giao mỗi bữa.</p>
                 </div>
 
                 {/* Địa chỉ nhận hàng */}
                 <div className="sm:col-span-2">
-                  <label className="text-gray-700 font-semibold block mb-1.5">Địa chỉ giao hàng mặc định</label>
+                  <label className="text-gray-700 font-semibold block mb-1.5">Địa chỉ giao hàng cho gói này</label>
                   <input
                     type="text"
-                    disabled
-                    value={user?.address || "Chưa có địa chỉ mặc định"}
-                    className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-xs text-gray-600"
+                    value={shippingAddress}
+                    onChange={(e) => setShippingAddress(e.target.value)}
+                    placeholder="Nhập địa chỉ nhận món (ví dụ: Số nhà, tòa nhà, tên đường...)"
+                    className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-xs text-gray-800 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                   />
+                  <p className="mt-1 text-[11px] text-gray-400">* Chỉ áp dụng giao cho gói ăn này, không thay đổi địa chỉ tài khoản mặc định.</p>
                 </div>
 
                 {/* Ghi chú giao hàng */}
@@ -616,8 +605,8 @@ export default function RegisterMealPackagePage() {
                   <input
                     type="text"
                     placeholder="Ví dụ: Giao trước 11h30 trưa, gửi lễ tân tầng 1..."
-                    value={shippingNote}
-                    onChange={(e) => setShippingNote(e.target.value)}
+                    value={userNote}
+                    onChange={(e) => setUserNote(e.target.value)}
                     className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-xs text-gray-800 placeholder:text-gray-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                   />
                 </div>
@@ -643,9 +632,7 @@ export default function RegisterMealPackagePage() {
                       <span className="text-[11px] font-semibold uppercase tracking-wider text-emerald-700">
                         {durationLabel} • {mealLabel}
                       </span>
-                      <h3 className="text-base font-extrabold text-gray-900 mt-0.5">
-                        {targetPackageName}
-                      </h3>
+                      <h3 className="text-base font-extrabold text-gray-900 mt-0.5">{targetPackageName}</h3>
                     </div>
                     <span className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-xs font-bold text-emerald-800 shadow-xs border border-emerald-100">
                       <Flame size={12} className="text-orange-500" />
@@ -685,17 +672,13 @@ export default function RegisterMealPackagePage() {
 
                   <div className="flex items-center justify-between">
                     <span>Ngày bắt đầu nhận:</span>
-                    <span className="font-semibold text-gray-900">
-                      {new Date(startDate).toLocaleDateString("vi-VN")}
-                    </span>
+                    <span className="font-semibold text-gray-900">{new Date(startDate).toLocaleDateString("vi-VN")}</span>
                   </div>
 
                   <div className="pt-3 border-t border-gray-100 flex items-baseline justify-between">
                     <span className="text-sm font-bold text-gray-900">Tổng thanh toán:</span>
                     <div className="text-right">
-                      <span className="text-xl font-extrabold text-orange-600">
-                        {fallbackPrice.toLocaleString("vi-VN")} ₫
-                      </span>
+                      <span className="text-xl font-extrabold text-orange-600">{fallbackPrice.toLocaleString("vi-VN")} ₫</span>
                       <p className="text-[10px] text-gray-400">Đã bao gồm VAT & toàn bộ dịch vụ</p>
                     </div>
                   </div>
@@ -716,9 +699,7 @@ export default function RegisterMealPackagePage() {
                   isDisabled={checkoutMutation.isPending || isLoadingPlans}
                 >
                   <CreditCard size={16} />
-                  <span>
-                    {checkoutMutation.isPending ? "Đang xử lý đặt gói..." : "Xác nhận & Chuyển khoản VietQR"}
-                  </span>
+                  <span>{checkoutMutation.isPending ? "Đang xử lý đặt gói..." : "Xác nhận & Chuyển khoản VietQR"}</span>
                   {!checkoutMutation.isPending && <ArrowRight size={16} />}
                 </Button>
 

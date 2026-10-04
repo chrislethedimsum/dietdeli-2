@@ -55,7 +55,13 @@ export const subscriptionApi = {
     return response.data;
   },
 
-  checkout: async (data: { packageId: number; startDate?: string }): Promise<CheckoutResponse> => {
+  checkout: async (data: {
+    packageId: number;
+    startDate?: string;
+    userNote?: string;
+    planShippingAddress?: string;
+    planPhone?: string;
+  }): Promise<CheckoutResponse> => {
     const response = await axiosClient.post<CheckoutResponse>("/subscriptions/checkout", data);
     return response.data;
   },

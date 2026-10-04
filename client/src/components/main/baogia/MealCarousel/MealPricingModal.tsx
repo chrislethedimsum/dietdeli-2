@@ -244,7 +244,7 @@ export default function MealPricingModal(props: MealPricingModalProps & Partial<
                         <Select
                           name="gender"
                           isRequired
-                          defaultSelectedKey="male"
+                          defaultValue="male"
                           validate={(val) => (!val ? "Vui lòng chọn giới tính" : null)}
                           className="flex flex-col gap-1"
                         >
@@ -328,7 +328,7 @@ export default function MealPricingModal(props: MealPricingModalProps & Partial<
                         <Select
                           name="activity"
                           isRequired
-                          defaultSelectedKey="1.2"
+                          defaultValue="1.2"
                           validate={(val) => (!val ? "Vui lòng chọn tính chất công việc" : null)}
                           className="flex flex-col gap-1"
                         >

@@ -1,8 +1,11 @@
 "use client";
-import { ShoppingBag } from "lucide-react";
-import { type MealCardData, MEAL_PACKAGES } from "../../../../data/mealPackages";
+import { ShoppingBag, Calculator } from "lucide-react";
+import { type MealCardData, MEAL_PACKAGES } from "@/data/mealPackages";
 import MealDetailModal from "./MealDetailModal";
 import MealPricingModal from "./MealPricingModal";
+import { useAuthStore } from "@/store/useAuthStore";
+import { Link } from "react-router";
+import { Button } from "@heroui/react";
 
 interface CardProps {
   data?: MealCardData;
@@ -12,6 +15,7 @@ interface CardProps {
 export default function Card({ data, index = 0 }: CardProps) {
   // Lấy dữ liệu theo props hoặc tự động lấy theo index trong mảng MEAL_PACKAGES
   const cardData = data || MEAL_PACKAGES[index % MEAL_PACKAGES.length];
+  const { isAuthenticated } = useAuthStore();
 
   return (
     <div className="flex flex-col rounded-3xl overflow-hidden bg-white shadow-md hover:shadow-xl transition-shadow duration-300 w-full max-w-sm mx-auto h-full border border-gray-100 min-w-0">
@@ -29,9 +33,17 @@ export default function Card({ data, index = 0 }: CardProps) {
       <div className="flex justify-around p-3.5 sm:p-4 gap-2.5 sm:gap-3">
         {/* MODAL 1: XEM THÊM */}
         <MealDetailModal data={cardData} />
-
         {/* MODAL 2: BÁO GIÁ */}
-        <MealPricingModal data={cardData} />
+        {isAuthenticated ? (
+          <Link to="/user/registerpackage" className="flex-1 flex">
+            <Button className="w-full flex flex-row items-center justify-center py-2.5 sm:py-3 px-2 sm:px-3 rounded-full bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-medium text-xs sm:text-sm transition cursor-pointer shadow-xs hover:shadow-md">
+              <Calculator size={16} />
+              <span className="px-1">Báo giá</span>
+            </Button>
+          </Link>
+        ) : (
+          <MealPricingModal data={cardData} />
+        )}
       </div>
 
       {/* Tiêu đề gói ăn */}
