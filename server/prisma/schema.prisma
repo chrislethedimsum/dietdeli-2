@@ -62,25 +62,14 @@ model Dish {
   @@map("dish")
 }
 
-model Day {
-  id        Int      @id @default(autoincrement())
-  date      String
-  dayOfWeek Int      @map("day_of_week")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-  menus     Menu[]
-
-  @@map("day")
-}
-
 model Menu {
   id        Int      @id @default(autoincrement())
   dishId    Int      @map("dish_id")
-  idDay     Int      @map("id_day")
+  date      DateTime
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
-  dish      Dish     @relation(fields: [dishId], references: [id], onDelete: Cascade)
-  day       Day      @relation(fields: [idDay], references: [id], onDelete: Cascade)
+
+  dish Dish @relation(fields: [dishId], references: [id], onDelete: Cascade)
 
   @@map("menu")
 }
