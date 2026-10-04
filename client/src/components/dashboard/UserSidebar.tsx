@@ -1,7 +1,7 @@
 import { NavLink, useNavigate } from "react-router";
 import { useAuthStore } from "../../store/useAuthStore";
 import { authApi } from "../../api/auth";
-import { Broccoli } from "lucide-react";
+import { Broccoli, LayoutDashboard } from "lucide-react";
 
 interface UserSidebarProps {
   isOpen: boolean;
@@ -15,19 +15,9 @@ const menuItems = [
     icon: "dashboard",
   },
   {
-    label: "Gói ăn của tôi",
+    label: "Quản lí gói ăn",
     path: "/user/mealpackage",
     icon: "mealpackage",
-  },
-  {
-    label: "Đăng ký gói mới",
-    path: "/user/registerpackage",
-    icon: "plus",
-  },
-  {
-    label: "Bảng giá & Thực đơn",
-    path: "/baogia",
-    icon: "menu",
   },
 ];
 
@@ -43,11 +33,7 @@ function Icon({ type }: { type: string }) {
 
   switch (type) {
     case "dashboard":
-      return (
-        <svg {...common}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M3 13h8V3H3v10Zm0 8h8v-5H3v5Zm10 0h8V11h-8v10Zm0-18v5h8V3h-8Z" />
-        </svg>
-      );
+      return <LayoutDashboard />;
 
     case "menu":
       return (

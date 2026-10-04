@@ -1,6 +1,6 @@
 import { useNavigate, Link } from "react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardHeader, Table, Button, Chip, Avatar } from "@heroui/react";
+import { Card, CardHeader, Table, Button, Chip } from "@heroui/react";
 import { Calendar, CreditCard, RefreshCw, Plus, UtensilsCrossed, Sparkles, Flame, CheckCircle2, Clock, ArrowRight } from "lucide-react";
 import { subscriptionApi, type UserSubscription } from "../../api/subscription.api";
 
@@ -266,25 +266,25 @@ export default function MealPackagePage() {
                   <Table.ScrollContainer>
                     <Table.Content aria-label="Danh sách gói ăn cá nhân" className="min-w-[950px]">
                       <Table.Header>
-                        <Table.Column id="code" className="pb-3 text-xs font-medium uppercase text-gray-400">
+                        <Table.Column id="code" className="pb-3 text-xs font-medium uppercase text-gray-400 text-center">
                           Mã đơn / Gói
                         </Table.Column>
-                        <Table.Column id="package" className="pb-3 text-xs font-medium uppercase text-gray-400">
+                        <Table.Column id="package" className="pb-3 text-xs font-medium uppercase text-gray-400 text-center">
                           Gói dinh dưỡng
                         </Table.Column>
-                        <Table.Column id="meals" className="pb-3 text-xs font-medium uppercase text-gray-400">
+                        <Table.Column id="meals" className="pb-3 text-xs font-medium uppercase text-gray-400 text-center">
                           Tiến trình bữa ăn
                         </Table.Column>
-                        <Table.Column id="dates" className="pb-3 text-xs font-medium uppercase text-gray-400">
+                        <Table.Column id="dates" className="pb-3 text-xs font-medium uppercase text-gray-400 text-center">
                           Thời gian áp dụng
                         </Table.Column>
-                        <Table.Column id="price" className="pb-3 text-xs font-medium uppercase text-gray-400">
+                        <Table.Column id="price" className="pb-3 text-xs font-medium uppercase text-gray-400 text-center">
                           Tổng tiền
                         </Table.Column>
-                        <Table.Column id="status" className="pb-3 text-xs font-medium uppercase text-gray-400">
+                        <Table.Column id="status" className="pb-3 text-xs font-medium uppercase text-gray-400 text-center">
                           Trạng thái
                         </Table.Column>
-                        <Table.Column id="action" className="pb-3 text-xs font-medium uppercase text-gray-400 text-right">
+                        <Table.Column id="action" className="pb-3 text-xs font-medium uppercase text-gray-400 text-center">
                           Thao tác
                         </Table.Column>
                       </Table.Header>
@@ -308,11 +308,6 @@ export default function MealPackagePage() {
                               {/* 2. Gói dinh dưỡng */}
                               <Table.Cell className="py-4">
                                 <div className="flex items-center gap-3">
-                                  <Avatar>
-                                    <Avatar.Fallback className="bg-emerald-100 text-emerald-700 font-semibold text-xs">
-                                      {sub.package.name.slice(0, 2).toUpperCase()}
-                                    </Avatar.Fallback>
-                                  </Avatar>
                                   <div>
                                     <p className="text-sm font-semibold text-gray-900">{sub.package.name}</p>
                                     <div className="flex items-center gap-1.5 mt-0.5">
