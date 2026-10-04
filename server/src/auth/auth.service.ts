@@ -124,9 +124,9 @@ export class AuthService {
         });
         subscriptionData = sub;
         // Cấu hình thông tin chuyển khoản VietQR
-        const bankAccount = '0389150399';
+        const bankAccount = '8088080511999';
         const bankCode = 'MB'; // MBBank
-        const accountName = 'NGUYEN VIET CHINH';
+        const accountName = 'LE XUAN PHUC';
         const transferContent = `DIETDELI ${sub.id}`;
         const amount = mealPackage.price;
 

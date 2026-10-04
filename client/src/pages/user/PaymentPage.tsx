@@ -125,7 +125,7 @@ export default function PaymentPage() {
         <button
           onClick={() => {
             sessionStorage.removeItem("dietdeli_payment");
-            navigate("/");
+            navigate("/user/mealpackage");
           }}
           className="w-full mt-6 py-3 rounded-full bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm transition shadow-md hover:shadow-lg cursor-pointer flex items-center justify-center gap-2"
         >

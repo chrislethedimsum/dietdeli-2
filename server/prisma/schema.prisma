@@ -97,7 +97,7 @@ model UserSubscription {
   userNote            String?       @map("user_note")
   adminNote           String?       @map("admin_note")
   planShippingAddress String?       @map("plan_shipping_address")
-  planPhone           Int?          @map("plan_phone")
+  planPhone           String?       @map("plan_phone")
 
   @@map("user_subscription")
 }

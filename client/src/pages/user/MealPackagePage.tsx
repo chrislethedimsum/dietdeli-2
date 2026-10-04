@@ -59,9 +59,9 @@ export default function MealPackagePage() {
 
   // 2. Chuyển hướng tới trang thanh toán kèm thông tin gói
   const handlePayNow = (sub: UserSubscription) => {
-    const bankAccount = "0389150399";
+    const bankAccount = "8088080511999";
     const bankCode = "MB";
-    const accountName = "NGUYEN VIET CHINH";
+    const accountName = "LE XUAN PHUC";
     const transferContent = `DIETDELI ${sub.id}`;
     const amount = sub.package.price;
     const qrUrl = `https://img.vietqr.io/image/${bankCode}-${bankAccount}-compact2.png?amount=${amount}&addInfo=${encodeURIComponent(

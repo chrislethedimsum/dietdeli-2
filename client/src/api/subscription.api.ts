@@ -44,6 +44,14 @@ export interface CheckoutResponse {
   };
 }
 
+export interface CheckoutPayload {
+  packageId: number;
+  startDate?: string;
+  userNote?: string;
+  planShippingAddress?: string;
+  planPhone?: string;
+}
+
 export const subscriptionApi = {
   getMySubscriptions: async (): Promise<UserSubscription[]> => {
     const response = await axiosClient.get<UserSubscription[]>("/subscriptions/my-subscriptions");
@@ -55,13 +63,7 @@ export const subscriptionApi = {
     return response.data;
   },
 
-  checkout: async (data: {
-    packageId: number;
-    startDate?: string;
-    userNote?: string;
-    planShippingAddress?: string;
-    planPhone?: string;
-  }): Promise<CheckoutResponse> => {
+  checkout: async (data: CheckoutPayload): Promise<CheckoutResponse> => {
     const response = await axiosClient.post<CheckoutResponse>("/subscriptions/checkout", data);
     return response.data;
   },

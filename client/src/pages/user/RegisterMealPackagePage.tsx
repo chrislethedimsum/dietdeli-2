@@ -68,7 +68,7 @@ export default function RegisterMealPackagePage() {
   const [startDate, setStartDate] = useState(tomorrow);
   const [shippingPhone, setShippingPhone] = useState(user?.phone || "");
   const [shippingAddress, setShippingAddress] = useState(user?.address || "");
-  const [userNote, setUserNote] = useState("");
+  const [shippingNote, setShippingNote] = useState("");
 
   // Công cụ tính Calo / TDEE nhanh
   const [showCalculator, setShowCalculator] = useState(false);
@@ -160,12 +160,13 @@ export default function RegisterMealPackagePage() {
       return;
     }
 
+    if (!matchedPackage) return;
     checkoutMutation.mutate({
       packageId: matchedPackage.id,
       startDate,
-      userNote,
       planShippingAddress: shippingAddress,
       planPhone: shippingPhone,
+      userNote: shippingNote,
     });
   };
 
@@ -573,30 +574,31 @@ export default function RegisterMealPackagePage() {
                   <p className="mt-1 text-[11px] text-gray-400">DietDeli chuẩn bị nguyên liệu sạch trước 1 ngày.</p>
                 </div>
 
-                {/* Số điện thoại nhận hàng */}
+                {/* Số điện thoại nhận hàng cho gói này */}
                 <div>
-                  <label className="text-gray-700 font-semibold block mb-1.5">Số điện thoại liên hệ</label>
+                  <label className="text-gray-700 font-semibold block mb-1.5">Số điện thoại nhận hàng</label>
                   <input
                     type="text"
                     value={shippingPhone}
                     onChange={(e) => setShippingPhone(e.target.value)}
                     placeholder="Nhập số điện thoại nhận hàng"
-                    className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-xs text-gray-800 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-xs text-gray-800 focus:border-emerald-500 focus:outline-none"
                   />
-                  <p className="mt-1 text-[11px] text-gray-400">Tài xế sẽ gọi điện trước khi giao mỗi bữa.</p>
                 </div>
 
-                {/* Địa chỉ nhận hàng */}
+                {/* Địa chỉ giao hàng cho gói này */}
                 <div className="sm:col-span-2">
                   <label className="text-gray-700 font-semibold block mb-1.5">Địa chỉ giao hàng cho gói này</label>
                   <input
                     type="text"
                     value={shippingAddress}
                     onChange={(e) => setShippingAddress(e.target.value)}
-                    placeholder="Nhập địa chỉ nhận món (ví dụ: Số nhà, tòa nhà, tên đường...)"
-                    className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-xs text-gray-800 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    placeholder="Nhập địa chỉ nhận món (ví dụ: Tòa nhà A, số 123...)"
+                    className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-xs text-gray-800 focus:border-emerald-500 focus:outline-none"
                   />
-                  <p className="mt-1 text-[11px] text-gray-400">* Chỉ áp dụng giao cho gói ăn này, không thay đổi địa chỉ tài khoản mặc định.</p>
+                  <p className="mt-1 text-[11px] text-gray-400">
+                    * Chỉ áp dụng cho gói ăn này, không thay đổi địa chỉ tài khoản mặc định của bạn.
+                  </p>
                 </div>
 
                 {/* Ghi chú giao hàng */}
@@ -605,8 +607,8 @@ export default function RegisterMealPackagePage() {
                   <input
                     type="text"
                     placeholder="Ví dụ: Giao trước 11h30 trưa, gửi lễ tân tầng 1..."
-                    value={userNote}
-                    onChange={(e) => setUserNote(e.target.value)}
+                    value={shippingNote}
+                    onChange={(e) => setShippingNote(e.target.value)}
                     className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-xs text-gray-800 placeholder:text-gray-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                   />
                 </div>

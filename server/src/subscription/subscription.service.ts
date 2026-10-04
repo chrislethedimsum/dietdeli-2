@@ -18,6 +18,10 @@ export class SubscriptionService {
         `Gói ăn với ID ${dto.packageId} không tồn tại hoặc đã ngừng áp dụng`,
       );
     }
+    // 2. Lấy thông tin user hiện tại để lấy fallback SĐT & Địa chỉ nếu dto không truyền
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
 
     // b. Tính toán ngày bắt đầu & ngày kết thúc
     const startDate = dto.startDate ? new Date(dto.startDate) : new Date();
@@ -33,6 +37,10 @@ export class SubscriptionService {
         endDate,
         paymentStatus: 'UNPAID',
         remainingMeals: mealPackage.totalMeals,
+        userNote: dto.userNote || null,
+        planShippingAddress: dto.planShippingAddress || user?.address || null,
+        planPhone: dto.planPhone || user?.phone || null,
+        // adminNote để trống mặc định, dành riêng cho Admin ghi chú sau này
       },
       include: {
         package: true,
@@ -40,9 +48,9 @@ export class SubscriptionService {
     });
 
     // d. Dùng chính subscription.id làm mã đơn / cú pháp chuyển khoản
-    const bankAccount = '0389150399';
+    const bankAccount = '8088080511999';
     const bankCode = 'MB'; // MBBank
-    const accountName = 'NGUYEN VIET CHINH';
+    const accountName = 'LE XUAN PHUC';
     const transferContent = `DIETDELI ${subscription.id}`;
     const amount = mealPackage.price;
     const qrUrl = `https://img.vietqr.io/image/${bankCode}-${bankAccount}-compact2.png?amount=${amount}&addInfo=${encodeURIComponent(
@@ -70,13 +78,18 @@ export class SubscriptionService {
   }
 
   // 2. ADMIN CẬP NHẬT TRẠNG THÁI THANH TOÁN (ĐÁNH DẤU PAID / UNPAID / CANCELLED)
-  async updatePaymentStatus(subscriptionId: number, status: 'PAID' | 'UNPAID' | 'CANCELLED') {
+  async updatePaymentStatus(
+    subscriptionId: number,
+    status: 'PAID' | 'UNPAID' | 'CANCELLED',
+  ) {
     const subscription = await this.prisma.userSubscription.findUnique({
       where: { id: subscriptionId },
     });
 
     if (!subscription) {
-      throw new NotFoundException(`Không tìm thấy đơn đăng ký gói #${subscriptionId}`);
+      throw new NotFoundException(
+        `Không tìm thấy đơn đăng ký gói #${subscriptionId}`,
+      );
     }
 
     const updated = await this.prisma.userSubscription.update({
