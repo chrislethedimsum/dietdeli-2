@@ -17,7 +17,6 @@ import { AdminGuard } from '../auth/guards/admin.guard.js';
 import { CreateMenuDto } from './dto/create-menu.dto.js';
 
 @Controller('menus')
-@UseGuards(JwtAuthGuard, AdminGuard)
 export class MenuController {
   constructor(private readonly menuService: MenuService) {}
 
@@ -45,6 +44,7 @@ export class MenuController {
    * POST /api/menus
    */
   @Post()
+  @UseGuards(JwtAuthGuard, AdminGuard)
   async create(@Body() dto: CreateMenuDto) {
     return this.menuService.create(dto);
   }
@@ -53,6 +53,7 @@ export class MenuController {
    * PATCH /api/menus/:id
    */
   @Patch(':id')
+  @UseGuards(JwtAuthGuard, AdminGuard)
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: CreateMenuDto,
@@ -64,6 +65,7 @@ export class MenuController {
    * DELETE /api/menus/:id
    */
   @Delete(':id')
+  @UseGuards(JwtAuthGuard, AdminGuard)
   async remove(@Param('id', ParseIntPipe) id: number) {
     return this.menuService.remove(id);
   }

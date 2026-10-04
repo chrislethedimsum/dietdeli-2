@@ -23,6 +23,9 @@ export interface UserSubscription {
   createdAt: string;
   updatedAt: string;
   package: MealPackage;
+  planShippingAddress?: string | null;
+  planPhone?: string | null;
+  userNote?: string | null;
 }
 
 export interface CheckoutResponse {

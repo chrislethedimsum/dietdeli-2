@@ -42,8 +42,8 @@ export class MenuService {
         ...(startDate &&
           endDate && {
             date: {
-              gte: this.parseDate(startDate),
-              lte: this.parseDate(endDate),
+              gte: new Date(`${startDate.slice(0, 10)}T00:00:00.000Z`),
+              lte: new Date(`${endDate.slice(0, 10)}T23:59:59.999Z`),
             },
           }),
       },

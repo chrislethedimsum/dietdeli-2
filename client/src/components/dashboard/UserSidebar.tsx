@@ -1,7 +1,7 @@
 import { NavLink, useNavigate } from "react-router";
 import { useAuthStore } from "../../store/useAuthStore";
 import { authApi } from "../../api/auth";
-import { Broccoli, LayoutDashboard } from "lucide-react";
+import { Broccoli, LayoutDashboard, Utensils } from "lucide-react";
 
 interface UserSidebarProps {
   isOpen: boolean;
@@ -13,6 +13,11 @@ const menuItems = [
     label: "User Dashboard",
     path: "/user",
     icon: "dashboard",
+  },
+  {
+    label: "Đặt món",
+    path: "/user/order",
+    icon: "order",
   },
   {
     label: "Quản lí gói ăn",
@@ -50,11 +55,7 @@ function Icon({ type }: { type: string }) {
       );
 
     case "order":
-      return (
-        <svg {...common}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M6 2h12v20H6zM9 6h6M9 10h6M9 14h4" />
-        </svg>
-      );
+      return <Utensils />;
 
     case "mealpackage":
       return <Broccoli />;
