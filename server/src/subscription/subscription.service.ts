@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CheckoutSubscriptionDto } from './dto/usersubscription.dto.js';
 
@@ -18,6 +22,22 @@ export class SubscriptionService {
         `Gói ăn với ID ${dto.packageId} không tồn tại hoặc đã ngừng áp dụng`,
       );
     }
+
+    const activeSub = await this.prisma.userSubscription.findFirst({
+      where: {
+        idUser: userId,
+        paymentStatus: 'PAID',
+        remainingMeals: { gt: 0 }, // Còn bữa ăn
+        endDate: { gte: new Date() }, // Chưa hết hạn ngày
+      },
+      include: { package: true },
+    });
+    if (activeSub) {
+      throw new BadRequestException(
+        `Bạn đang có gói ăn "${activeSub.package.name}" đang hoạt động (còn ${activeSub.remainingMeals} bữa). Bạn vui lòng sử dụng hết gói này trước khi đăng ký gói mới!`,
+      );
+    }
+
     // 2. Lấy thông tin user hiện tại để lấy fallback SĐT & Địa chỉ nếu dto không truyền
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -112,6 +132,7 @@ export class SubscriptionService {
         package: true,
       },
       orderBy: { createdAt: 'desc' },
+      omit: { adminNote: true },
     });
   }
 

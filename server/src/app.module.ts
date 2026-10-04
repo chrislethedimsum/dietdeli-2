@@ -9,6 +9,7 @@ import { DishModule } from './dish/dish.module.js';
 import { SubscriptionModule } from './subscription/subscription.module.js';
 import { UploadModule } from './upload/upload.module.js';
 import { MenuModule } from './menu/menu.module.js';
+import { OrderModule } from './order/order.module.js';
 
 @Module({
   imports: [
@@ -19,7 +20,8 @@ import { MenuModule } from './menu/menu.module.js';
     DishModule,
     MenuModule,
     SubscriptionModule,
-    UploadModule
+    UploadModule,
+    OrderModule
   ],
   controllers: [AppController],
   providers: [AppService],

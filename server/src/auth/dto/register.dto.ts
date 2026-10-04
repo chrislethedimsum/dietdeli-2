@@ -50,4 +50,16 @@ export class RegisterDto {
 
   @IsOptional()
   calories?: number; // 400 | 600 | 800
+
+  @IsOptional()
+  @IsString()
+  userNote?: string;
+
+  @IsOptional()
+  @IsString()
+  planShippingAddress?: string;
+
+  @IsOptional()
+  @IsString()
+  planPhone?: string;
 }

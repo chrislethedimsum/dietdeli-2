@@ -117,6 +117,9 @@ export class AuthService {
             endDate,
             paymentStatus: 'UNPAID',
             remainingMeals: mealPackage.totalMeals,
+            planShippingAddress: dto.planShippingAddress || dto.address || null,
+            planPhone: dto.planPhone || dto.phone || null,
+            userNote: dto.userNote || null,
           },
           include: {
             package: true,

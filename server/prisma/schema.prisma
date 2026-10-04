@@ -79,6 +79,8 @@ enum paymentStatus {
   PAID
   PROCESSING
   CANCELLED
+  COMPLETED
+  EXPIRED
 }
 
 model UserSubscription {
@@ -102,21 +104,37 @@ model UserSubscription {
   @@map("user_subscription")
 }
 
+enum MealShift {
+  LUNCH   // Bữa trưa
+  DINNER  // Bữa tối
+}
+enum OrderStatus {
+  ORDERED    // Đã đặt món
+  COOKING    // Đang chuẩn bị
+  SHIPPING   // Đang giao
+  COMPLETED  // Đã giao thành công
+  CANCELLED  // Đã hủy món (hoàn suất ăn)
+}
 model Order {
   id                 Int              @id @default(autoincrement())
   userSubscriptionId Int              @map("user_subscription_id")
   userId             Int              @map("user_id")
   packageId          Int              @map("package_id")
+
+  deliveryDate       DateTime         @map("delivery_date") // Ngày nhận món
+  mealShift          MealShift        @default(LUNCH) @map("meal_shift")
+  
   shippingAddress    String           @map("shipping_address")
   shippingNote       String?          @map("shipping_note")
-  status             String           @default("ORDER")
+  status             OrderStatus      @default(ORDERED)
+  
   createdAt          DateTime         @default(now()) @map("created_at")
   updatedAt          DateTime         @updatedAt @map("updated_at")
+  
   package            MealPackage      @relation(fields: [packageId], references: [id])
   user               User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   userSubscription   UserSubscription @relation(fields: [userSubscriptionId], references: [id], onDelete: Cascade)
   orderItems         OrderItem[]
-
   @@map("order")
 }
 

@@ -34,6 +34,9 @@ export interface RegisterPayload {
   packageType?: string;
   mealOption?: string;
   calories?: number;
+  userNote?: string;
+  planShippingAddress?: string;
+  planPhone?: string;
 }
 export interface RegisterResponse {
   message: string;

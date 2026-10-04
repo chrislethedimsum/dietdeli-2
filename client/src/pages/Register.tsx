@@ -16,6 +16,7 @@ export default function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [address, setAddress] = useState(""); // Địa chỉ nhận hàng
+  const [userNote, setUserNote] = useState("");
   // Đọc lựa chọn bữa ăn đã chọn từ Modal làm giá trị mặc định:
   const [mealPlanOption, setMealPlanOption] = useState<"1_meal" | "2_meals">((consultationData as any)?.mealOption || "2_meals");
   // state quản lý lỗi và loading
@@ -77,6 +78,9 @@ export default function Register() {
         height: consultationData?.customerStats?.height,
         weight: consultationData?.customerStats?.weight,
         goal: consultationData?.customerStats?.goal,
+        planShippingAddress: address,
+        planPhone: phone,
+        userNote,
         // Gói ăn
         packageType: consultationData?.packageId,
         mealOption: mealPlanOption,
@@ -240,6 +244,17 @@ export default function Register() {
                 className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-orange-500"
               />
               {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address}</p>}
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-gray-700 mb-1">Ghi chú cho shipper & bếp</label>
+              <input
+                type="text"
+                placeholder="Giao vào lúc nào, địa chỉ tầng mấy..."
+                value={userNote}
+                onChange={(e) => setUserNote(e.target.value)}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-orange-500"
+              />
             </div>
 
             <button
