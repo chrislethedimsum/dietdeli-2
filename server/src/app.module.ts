@@ -8,6 +8,7 @@ import { PlansModule } from './plans/plans.module.js';
 import { DishModule } from './dish/dish.module.js';
 import { SubscriptionModule } from './subscription/subscription.module.js';
 import { UploadModule } from './upload/upload.module.js';
+import { MenuModule } from './menu/menu.module.js';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { UploadModule } from './upload/upload.module.js';
     AuthModule,
     PlansModule,
     DishModule,
+    MenuModule,
     SubscriptionModule,
     UploadModule
   ],
