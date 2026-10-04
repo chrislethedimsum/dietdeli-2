@@ -12,16 +12,30 @@ export class MenuService {
 
   /**
    * Convert YYYY-MM-DD -> Date
+   * Menu.date trong Prisma đang dùng @db.Date
    */
   private parseDate(date: string): Date {
     return new Date(`${date}T00:00:00.000Z`);
   }
 
   /**
-   * GET /api/menus
+   * Kiểm tra ngày đã qua hay chưa.
    *
-   * Lấy toàn bộ menu
+   * Hôm nay: cho phép
+   * Ngày tương lai: cho phép
+   * Ngày trước hôm nay: không cho phép
    */
+  private isPastDate(date: Date): boolean {
+    const today = new Date();
+
+    today.setHours(0, 0, 0, 0);
+
+    const targetDate = new Date(date);
+    targetDate.setHours(0, 0, 0, 0);
+
+    return targetDate < today;
+  }
+
   async findAll(startDate?: string, endDate?: string) {
     return this.prisma.menu.findMany({
       where: {
@@ -34,11 +48,7 @@ export class MenuService {
           }),
       },
       include: {
-        dish: {
-          omit: {
-            isDeleted: true,
-          },
-        },
+        dish: true,
       },
       orderBy: {
         date: 'asc',
@@ -46,80 +56,62 @@ export class MenuService {
     });
   }
 
-  /**
-   * GET /api/menus/:id
-   *
-   * Lấy một menu
-   */
   async findOne(id: number) {
     const menu = await this.prisma.menu.findUnique({
-      where: {
-        id,
-      },
+      where: { id },
       include: {
-        dish: {
-          omit: {
-            isDeleted: true,
-          },
-        },
+        dish: true,
       },
     });
 
     if (!menu) {
-      throw new NotFoundException('Không tìm thấy menu');
+      throw new NotFoundException(`Không tìm thấy menu với ID ${id}`);
     }
 
     return menu;
   }
 
-  /**
-   * POST /api/menus
-   *
-   * Thêm món vào menu
-   */
   async create(dto: CreateMenuDto) {
-    const { dishId, date } = dto;
+    const menuDate = this.parseDate(dto.date);
 
-    const menuDate = this.parseDate(date);
+    // ==========================================
+    // 1. Không cho tạo menu ở ngày đã qua
+    // ==========================================
+    if (this.isPastDate(menuDate)) {
+      throw new BadRequestException('Không thể thêm menu cho ngày đã qua');
+    }
 
-    // =========================
-    // Kiểm tra món ăn
-    // Chỉ cho phép dish chưa bị xoá
-    // =========================
-
+    // ==========================================
+    // 2. Kiểm tra dish
+    // ==========================================
     const dish = await this.prisma.dish.findFirst({
       where: {
-        id: dishId,
+        id: dto.dishId,
         isDeleted: false,
       },
     });
 
     if (!dish) {
-      throw new NotFoundException(
-        'Không tìm thấy món ăn hoặc món ăn đã bị xoá',
-      );
+      throw new NotFoundException(`Không tìm thấy món ăn với ID ${dto.dishId}`);
     }
 
-    // =========================
-    // Kiểm tra món đã tồn tại
-    // trong cùng ngày
-    // =========================
-
-    const existingMenu = await this.prisma.menu.findFirst({
+    // ==========================================
+    // 3. Không cho cùng món trong cùng ngày
+    // ==========================================
+    const duplicateMenu = await this.prisma.menu.findFirst({
       where: {
-        dishId,
+        dishId: dto.dishId,
         date: menuDate,
       },
     });
 
-    if (existingMenu) {
-      throw new BadRequestException('Món ăn này đã có trong menu của ngày');
+    if (duplicateMenu) {
+      throw new BadRequestException('Món ăn này đã có trong menu của ngày này');
     }
 
-    // =========================
-    // Kiểm tra tối đa 2 món/ngày
-    // =========================
-
+    // ==========================================
+    // 4. Một ngày tối đa 2 món
+    // ==========================================
     const menuCount = await this.prisma.menu.count({
       where: {
         date: menuDate,
@@ -127,153 +119,141 @@ export class MenuService {
     });
 
     if (menuCount >= 2) {
-      throw new BadRequestException('Menu của ngày này đã có đủ 2 món');
+      throw new BadRequestException('Mỗi ngày chỉ được tối đa 2 món');
     }
 
-    // =========================
-    // Tạo menu
-    // =========================
-
+    // ==========================================
+    // 5. Tạo menu
+    // ==========================================
     return this.prisma.menu.create({
       data: {
-        dishId,
+        dishId: dto.dishId,
         date: menuDate,
       },
       include: {
-        dish: {
-          omit: {
-            isDeleted: true,
-          },
-        },
+        dish: true,
       },
     });
   }
 
-  /**
-   * PATCH /api/menus/:id
-   *
-   * Đổi món trong menu
-   */
   async update(id: number, dto: CreateMenuDto) {
-    const { dishId, date } = dto;
-
-    const menuDate = this.parseDate(date);
-
-    // =========================
-    // Kiểm tra menu hiện tại
-    // =========================
-
+    // ==========================================
+    // 1. Kiểm tra menu tồn tại
+    // ==========================================
     const menu = await this.prisma.menu.findUnique({
-      where: {
-        id,
-      },
+      where: { id },
     });
 
     if (!menu) {
-      throw new NotFoundException('Không tìm thấy menu');
+      throw new NotFoundException(`Không tìm thấy menu với ID ${id}`);
     }
 
-    // =========================
-    // Kiểm tra món ăn
-    // Chỉ cho phép dish chưa bị xoá
-    // =========================
+    // ==========================================
+    // 2. Không cho sửa menu của ngày đã qua
+    // ==========================================
+    if (this.isPastDate(menu.date)) {
+      throw new BadRequestException('Không thể sửa menu của ngày đã qua');
+    }
 
+    const newMenuDate = this.parseDate(dto.date);
+
+    // ==========================================
+    // 3. Không cho chuyển menu sang ngày đã qua
+    // ==========================================
+    if (this.isPastDate(newMenuDate)) {
+      throw new BadRequestException('Không thể chuyển menu sang ngày đã qua');
+    }
+
+    // ==========================================
+    // 4. Kiểm tra dish
+    // ==========================================
     const dish = await this.prisma.dish.findFirst({
       where: {
-        id: dishId,
+        id: dto.dishId,
         isDeleted: false,
       },
     });
 
     if (!dish) {
-      throw new NotFoundException(
-        'Không tìm thấy món ăn hoặc món ăn đã bị xoá',
-      );
+      throw new NotFoundException(`Không tìm thấy món ăn với ID ${dto.dishId}`);
     }
 
-    // =========================
-    // Kiểm tra trùng món
-    // trong cùng ngày
-    // =========================
-
-    const duplicate = await this.prisma.menu.findFirst({
+    // ==========================================
+    // 5. Không cho trùng món trong cùng ngày
+    // ==========================================
+    const duplicateMenu = await this.prisma.menu.findFirst({
       where: {
-        dishId,
-        date: menuDate,
+        dishId: dto.dishId,
+        date: newMenuDate,
         NOT: {
           id,
         },
       },
     });
 
-    if (duplicate) {
-      throw new BadRequestException('Món ăn này đã có trong menu của ngày');
+    if (duplicateMenu) {
+      throw new BadRequestException('Món ăn này đã có trong menu của ngày này');
     }
 
-    // =========================
-    // Kiểm tra tối đa 2 món/ngày
-    //
-    // Loại trừ menu hiện tại vì
-    // nó có thể đang thuộc ngày cũ
-    // =========================
-
-    const menuCount = await this.prisma.menu.count({
-      where: {
-        date: menuDate,
-        NOT: {
-          id,
+    // ==========================================
+    // 6. Nếu chuyển sang ngày khác,
+    //    kiểm tra ngày đó tối đa 2 món
+    // ==========================================
+    if (menu.date.getTime() !== newMenuDate.getTime()) {
+      const menuCount = await this.prisma.menu.count({
+        where: {
+          date: newMenuDate,
         },
-      },
-    });
+      });
 
-    if (menuCount >= 2) {
-      throw new BadRequestException('Menu của ngày này đã có đủ 2 món');
+      if (menuCount >= 2) {
+        throw new BadRequestException('Ngày được chọn đã có đủ 2 món');
+      }
     }
 
-    // =========================
-    // Update menu
-    // =========================
-
+    // ==========================================
+    // 7. Update
+    // ==========================================
     return this.prisma.menu.update({
-      where: {
-        id,
-      },
+      where: { id },
       data: {
-        dishId,
-        date: menuDate,
+        dishId: dto.dishId,
+        date: newMenuDate,
       },
       include: {
-        dish: {
-          omit: {
-            isDeleted: true,
-          },
-        },
+        dish: true,
       },
     });
   }
 
-  /**
-   * DELETE /api/menus/:id
-   */
   async remove(id: number) {
+    // ==========================================
+    // 1. Kiểm tra menu tồn tại
+    // ==========================================
     const menu = await this.prisma.menu.findUnique({
-      where: {
-        id,
-      },
+      where: { id },
     });
 
     if (!menu) {
-      throw new NotFoundException('Không tìm thấy menu');
+      throw new NotFoundException(`Không tìm thấy menu với ID ${id}`);
     }
 
+    // ==========================================
+    // 2. Không cho xóa menu của ngày đã qua
+    // ==========================================
+    if (this.isPastDate(menu.date)) {
+      throw new BadRequestException('Không thể xóa menu của ngày đã qua');
+    }
+
+    // ==========================================
+    // 3. Xóa
+    // ==========================================
     await this.prisma.menu.delete({
-      where: {
-        id,
-      },
+      where: { id },
     });
 
     return {
-      message: 'Xóa món khỏi menu thành công',
+      message: 'Xóa menu thành công',
     };
   }
 }
