@@ -3,7 +3,6 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateDishDto } from './dto/createDish.dto.js';
 import { UpdateDishDto } from './dto/updateDish.dto.js';
 import { UploadService } from '../upload/upload.service.js';
-import { log } from 'console';
 
 @Injectable()
 export class DishService {
@@ -14,22 +13,36 @@ export class DishService {
 
   async findAll() {
     return this.prisma.dish.findMany({
-      where: { isDeleted: false },
-      orderBy: { id: 'asc' },
+      where: {
+        isDeleted: false,
+      },
+      omit: {
+        isDeleted: true,
+      },
+      orderBy: {
+        id: 'asc',
+      },
     });
   }
 
   async findOne(id: number) {
-    const dish = await this.prisma.dish.findUnique({
-      where: { id, isDeleted: false },
+    const dish = await this.prisma.dish.findFirst({
+      where: {
+        id,
+        isDeleted: false,
+      },
+      omit: {
+        isDeleted: true,
+      },
     });
 
     if (!dish) {
-      throw new Error(`Không tìm thấy món ăn với ID ${id}`);
+      throw new NotFoundException(`Không tìm thấy món ăn với ID ${id}`);
     }
 
     return dish;
   }
+
   async create(createDishDto: CreateDishDto, image?: Express.Multer.File) {
     let imageUrl: string | null = null;
 
@@ -42,6 +55,9 @@ export class DishService {
         ...createDishDto,
         image: imageUrl,
       },
+      omit: {
+        isDeleted: true,
+      },
     });
   }
 
@@ -51,7 +67,9 @@ export class DishService {
     image?: Express.Multer.File,
   ) {
     const dishExists = await this.prisma.dish.findUnique({
-      where: { id },
+      where: {
+        id,
+      },
     });
 
     if (!dishExists) {
@@ -59,28 +77,47 @@ export class DishService {
     }
 
     let imageUrl: string | null = dishExists.image;
+
     if (image) {
       imageUrl = await this.uploadService.uploadImage(image, 'dietdeli/dish');
     }
 
     return this.prisma.dish.update({
-      where: { id },
-      data: { ...updateDishDto, image: imageUrl },
+      where: {
+        id,
+      },
+      data: {
+        ...updateDishDto,
+        image: imageUrl,
+      },
+      omit: {
+        isDeleted: true,
+      },
     });
   }
 
   async remove(id: number) {
     const dishExists = await this.prisma.dish.findUnique({
-      where: { id },
+      where: {
+        id,
+      },
     });
 
     if (!dishExists) {
       throw new NotFoundException(`Không tìm thấy món ăn với ID ${id}`);
     }
 
-    return this.prisma.dish.update({
-      where: { id },
-      data: { ...dishExists, isDeleted: true },
+    await this.prisma.dish.update({
+      where: {
+        id,
+      },
+      data: {
+        isDeleted: true,
+      },
     });
+
+    return {
+      message: 'Xóa món ăn thành công',
+    };
   }
 }
