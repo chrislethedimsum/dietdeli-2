@@ -182,6 +182,79 @@ export default function OrderPage() {
     return subscriptions.find((s) => s.paymentStatus === "UNPAID");
   }, [subscriptions]);
 
+  // Tìm gói ăn hợp lệ cho ngày cụ thể (PAID, còn bữa, ngày giao nằm trong thời hạn gói)
+  const getSubscriptionForDate = (dateStr: string) => {
+    const dayStart = new Date(`${dateStr}T00:00:00.000Z`);
+    const dayEnd = new Date(`${dateStr}T23:59:59.999Z`);
+
+    return subscriptions.find((sub) => {
+      if (sub.paymentStatus !== "PAID" || sub.remainingMeals <= 0) return false;
+      const subStart = new Date(sub.startDate);
+      const subEnd = new Date(sub.endDate);
+      return subStart <= dayEnd && subEnd >= dayStart;
+    });
+  };
+
+  // Kiểm tra chi tiết trạng thái áp dụng gói ăn cho ngày dateStr
+  const checkDateSubscriptionStatus = (dateStr: string) => {
+    const matchedSub = getSubscriptionForDate(dateStr);
+    if (matchedSub) {
+      return {
+        isValid: true,
+        subscription: matchedSub,
+        reason: null,
+      };
+    }
+
+    const referenceSub =
+      activeSubscription ||
+      subscriptions.find((s) => s.paymentStatus === "PAID") ||
+      null;
+
+    if (!referenceSub) {
+      return {
+        isValid: false,
+        subscription: null,
+        reason: "no_subscription" as const,
+      };
+    }
+
+    const dayStart = new Date(`${dateStr}T00:00:00.000Z`);
+    const dayEnd = new Date(`${dateStr}T23:59:59.999Z`);
+    const subStart = new Date(referenceSub.startDate);
+    const subEnd = new Date(referenceSub.endDate);
+
+    if (subStart > dayEnd) {
+      return {
+        isValid: false,
+        subscription: referenceSub,
+        reason: "before_start" as const,
+      };
+    }
+
+    if (subEnd < dayStart) {
+      return {
+        isValid: false,
+        subscription: referenceSub,
+        reason: "after_end" as const,
+      };
+    }
+
+    if (referenceSub.remainingMeals <= 0) {
+      return {
+        isValid: false,
+        subscription: referenceSub,
+        reason: "out_of_meals" as const,
+      };
+    }
+
+    return {
+      isValid: false,
+      subscription: referenceSub,
+      reason: "invalid" as const,
+    };
+  };
+
   // Quy tắc chốt món: Trước 22:00 của ngày hôm trước (DeliveryDate - 1)
   const isDateOrderable = (dateStr: string) => {
     const now = new Date();
@@ -295,6 +368,35 @@ export default function OrderPage() {
       setFeedback({
         type: "error",
         message: "Bạn cần có gói ăn đã thanh toán và còn bữa ăn khả dụng để đặt món!",
+      });
+      return;
+    }
+    const subStatus = checkDateSubscriptionStatus(date);
+    if (!subStatus.isValid) {
+      if (subStatus.reason === "before_start") {
+        setFeedback({
+          type: "error",
+          message: `Ngày ${formatDate(date)} chưa tới thời hạn bắt đầu của gói ăn (Gói áp dụng từ ${formatDate(activeSubscription.startDate)} đến ${formatDate(activeSubscription.endDate)})!`,
+        });
+        return;
+      }
+      if (subStatus.reason === "after_end") {
+        setFeedback({
+          type: "error",
+          message: `Ngày ${formatDate(date)} đã vượt quá thời hạn của gói ăn (Gói kết thúc vào ngày ${formatDate(activeSubscription.endDate)})!`,
+        });
+        return;
+      }
+      if (subStatus.reason === "out_of_meals") {
+        setFeedback({
+          type: "error",
+          message: "Gói ăn của bạn đã sử dụng hết số suất ăn khả dụng!",
+        });
+        return;
+      }
+      setFeedback({
+        type: "error",
+        message: "Ngày chọn đặt món không nằm trong thời hạn hiệu lực của gói ăn!",
       });
       return;
     }
@@ -702,6 +804,8 @@ export default function OrderPage() {
             const orderable = isDateOrderable(day.date);
             const dayOrders = getActiveOrdersByDate(day.date);
             const isFullyBooked = dayOrders.length >= maxMealsPerDay;
+            const subStatus = checkDateSubscriptionStatus(day.date);
+            const isSubscriptionValid = subStatus.isValid;
 
             return (
               <Card
@@ -711,7 +815,7 @@ export default function OrderPage() {
                     ? "border-emerald-300 ring-2 ring-emerald-500/20 bg-white"
                     : dayOrders.length > 0
                     ? "border-amber-300 ring-2 ring-amber-500/20 bg-white"
-                    : pastDate
+                    : pastDate || !isSubscriptionValid
                     ? "border-gray-200 bg-gray-50/50"
                     : "border-gray-200 bg-white"
                 }`}
@@ -723,7 +827,7 @@ export default function OrderPage() {
                       ? "border-emerald-100 bg-emerald-50/80"
                       : dayOrders.length > 0
                       ? "border-amber-100 bg-amber-50/70"
-                      : pastDate
+                      : pastDate || !isSubscriptionValid
                       ? "border-gray-200 bg-gray-100/70"
                       : orderable
                       ? "border-gray-100 bg-gray-50"
@@ -758,6 +862,24 @@ export default function OrderPage() {
                         <span className="rounded-full bg-gray-200 px-2.5 py-1 text-xs font-medium text-gray-600">
                           Đã qua
                         </span>
+                      ) : !isSubscriptionValid ? (
+                        subStatus.reason === "before_start" ? (
+                          <span className="rounded-full bg-slate-200/80 px-2.5 py-1 text-xs font-medium text-slate-700">
+                            Chưa tới hạn gói
+                          </span>
+                        ) : subStatus.reason === "after_end" ? (
+                          <span className="rounded-full bg-slate-200/80 px-2.5 py-1 text-xs font-medium text-slate-600">
+                            Ngoài hạn gói
+                          </span>
+                        ) : subStatus.reason === "out_of_meals" ? (
+                          <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-800">
+                            Hết suất ăn
+                          </span>
+                        ) : (
+                          <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-500">
+                            Chưa có gói
+                          </span>
+                        )
                       ) : !orderable ? (
                         <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-800 flex items-center gap-1">
                           <Clock className="h-3 w-3" />
@@ -852,7 +974,12 @@ export default function OrderPage() {
                       // 👉 MÓN NÀY CHƯA ĐẶT
                       const canBookMore = dayOrders.length < maxMealsPerDay;
                       const hasRemainingMeals = Boolean(activeSubscription && activeSubscription.remainingMeals > 0);
-                      const disabledToOrder = !orderable || pastDate || !activeSubscription || !hasRemainingMeals || !canBookMore;
+                      const disabledToOrder =
+                        !orderable ||
+                        pastDate ||
+                        !isSubscriptionValid ||
+                        !hasRemainingMeals ||
+                        !canBookMore;
 
                       // Ca ăn gợi ý
                       const hasLunch = dayOrders.some((o) => o.mealShift === "LUNCH");
@@ -894,7 +1021,17 @@ export default function OrderPage() {
                           </div>
 
                           {/* Action Button */}
-                          {orderable && !pastDate ? (
+                          {!isSubscriptionValid ? (
+                            <span className="text-[11px] font-medium text-gray-400 self-end sm:self-center">
+                              {subStatus.reason === "before_start"
+                                ? `Gói áp dụng từ ${formatDate(activeSubscription?.startDate)}`
+                                : subStatus.reason === "after_end"
+                                ? `Gói kết thúc ngày ${formatDate(activeSubscription?.endDate)}`
+                                : subStatus.reason === "out_of_meals"
+                                ? "Đã hết số suất trong gói"
+                                : "Cần gói ăn để đặt"}
+                            </span>
+                          ) : orderable && !pastDate ? (
                             canBookMore ? (
                               <button
                                 type="button"
@@ -915,7 +1052,7 @@ export default function OrderPage() {
                             )
                           ) : (
                             <span className="text-[11px] font-medium text-gray-400 self-end sm:self-center">
-                              Đã khóa
+                              {pastDate ? "Đã qua" : "Đã khóa đơn"}
                             </span>
                           )}
                         </div>
@@ -928,7 +1065,15 @@ export default function OrderPage() {
                 <Card.Footer className="border-t border-gray-100 p-3 bg-gray-50/50">
                   <div className="flex w-full items-center justify-between text-xs text-gray-500">
                     <span>{day.dishes.length} món trong thực đơn</span>
-                    {isFullyBooked ? (
+                    {!isSubscriptionValid ? (
+                      <span className="text-gray-400">
+                        {subStatus.reason === "before_start"
+                          ? `Gói áp dụng từ ${formatDate(activeSubscription?.startDate)}`
+                          : subStatus.reason === "after_end"
+                          ? `Gói kết thúc ngày ${formatDate(activeSubscription?.endDate)}`
+                          : "Ngoài thời hạn áp dụng gói"}
+                      </span>
+                    ) : isFullyBooked ? (
                       <span className="text-emerald-700 font-semibold">
                         ✓ Đã đặt đủ ({dayOrders.length}/{maxMealsPerDay} bữa)
                       </span>

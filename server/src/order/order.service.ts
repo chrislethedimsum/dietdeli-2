@@ -39,6 +39,33 @@ export class OrderService {
     });
 
     if (!subscription) {
+      // Tìm xem user có gói ăn PAID nào không để báo lỗi chi tiết, rõ ràng
+      const anyPaidSub = await this.prisma.userSubscription.findFirst({
+        where: { idUser: userId, paymentStatus: 'PAID' },
+        include: { package: true },
+        orderBy: { createdAt: 'desc' },
+      });
+
+      if (anyPaidSub) {
+        if (anyPaidSub.remainingMeals < dto.totalMealsToDeduct) {
+          throw new BadRequestException(
+            `Gói ăn "${anyPaidSub.package?.name || ''}" của bạn đã sử dụng hết số suất ăn khả dụng!`,
+          );
+        }
+        if (anyPaidSub.startDate > endOfDay) {
+          const startFormatted = anyPaidSub.startDate.toISOString().slice(0, 10);
+          throw new BadRequestException(
+            `Ngày đặt món (${dateStr}) chưa tới thời hạn bắt đầu của gói ăn (Gói bắt đầu từ ngày ${startFormatted}).`,
+          );
+        }
+        if (anyPaidSub.endDate < startOfDay) {
+          const endFormatted = anyPaidSub.endDate.toISOString().slice(0, 10);
+          throw new BadRequestException(
+            `Gói ăn của bạn đã hết hạn vào ngày ${endFormatted}. Vui lòng đăng ký gói mới để tiếp tục đặt món!`,
+          );
+        }
+      }
+
       throw new BadRequestException(
         'Bạn không có gói ăn hợp lệ đã thanh toán hoặc đã hết số bữa ăn khả dụng!',
       );
