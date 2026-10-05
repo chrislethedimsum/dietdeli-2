@@ -6,7 +6,6 @@
 ---
 
 ## 📑 MỤC LỤC
-
 1. [Tech Stack Thực Tế](#i-tech-stack-thực-tế)
 2. [Hướng Dẫn Khởi Chạy (Quickstart)](#ii-hướng-dẫn-khởi-chạy-quickstart)
 3. [Kiến Trúc Tổng Quan & Luồng Nghiệp Vụ](#iii-kiến-trúc-tổng-quan--luồng-nghiệp-vụ)
@@ -20,7 +19,6 @@
 ## I. TECH STACK THỰC TẾ
 
 ### 1. Frontend (`client/`)
-
 - **Core:** React 19, TypeScript, Vite
 - **Styling & UI Kit:** Tailwind CSS v4, HeroUI v3 (NextUI evolved), Lucide React
 - **Data Fetching & State:** TanStack React Query v5, Zustand v5, Axios
@@ -28,7 +26,6 @@
 - **Carousel & UI Components:** Embla Carousel React
 
 ### 2. Backend (`server/`)
-
 - **Framework:** NestJS 12 (TypeScript, ESM)
 - **Database & ORM:** PostgreSQL, Prisma ORM 6
 - **Authentication & RBAC:** JWT (`@nestjs/jwt`, `passport-jwt`), `bcryptjs`, Custom RBAC Guards (`JwtAuthGuard`, `AdminGuard`)
@@ -42,7 +39,6 @@
 ## II. HƯỚNG DẪN KHỞI CHẠY (QUICKSTART)
 
 ### 1. Yêu Cầu Môi Trường
-
 - **Node.js:** >= 20.x (Khuyến nghị Node.js 22+)
 - **PostgreSQL:** >= 15.x
 - **Trình quản lý gói:** `npm`
@@ -50,7 +46,6 @@
 ---
 
 ### 2. Cài Đặt & Chạy Backend (`server/`)
-
 ```bash
 cd server
 
@@ -72,7 +67,6 @@ npm run start:dev
 ```
 
 **Mẫu file `.env` cho Server:**
-
 ```env
 PORT=3000
 DATABASE_URL="postgresql://username:password@localhost:5432/dietdeli?schema=public"
@@ -97,7 +91,6 @@ PAYOS_CHECKSUM_KEY="your_payos_checksum_key"
 ---
 
 ### 3. Cài Đặt & Chạy Frontend (`client/`)
-
 ```bash
 cd client
 
@@ -274,18 +267,14 @@ erDiagram
 ## V. QUY TẮC NGHIỆP VỤ CỐT LÕI (BUSINESS RULES)
 
 ### 1. Động Cơ Khóa Đơn (22:00 Cutoff Engine)
-
 Để bộ phận bếp chốt danh sách nguyên vật liệu nấu nướng vào sáng sớm:
-
 - **Nguyên tắc:** Việc **Đặt món** hoặc **Hủy món** cho ngày giao $T$ bắt buộc phải hoàn thành **trước 22:00 của ngày hôm trước ($T - 1$)**.
 - **Cơ chế:** Được kiểm soát chặt chẽ cả ở Frontend (vô hiệu hóa nút bấm, gắn badge cảnh báo) lẫn Backend thông qua class [`OrderTimeValidator.validateDailyCutoff`](server/src/utils/order-time.util.ts). Mọi request sau 22:00 sẽ bị từ chối với mã lỗi `400 Bad Request`.
 
 ### 2. Cửa Sổ Đặt Món Tuần Mới (Weekly Booking Window)
-
 - Menu tuần kế tiếp sẽ được mở cho khách hàng đặt trước từ **23:00 tối Thứ 6 đến trước 22:00 tối Chủ Nhật hàng tuần**.
 
 ### 3. Định Mức Gói Ăn Theo Ngày (Meal Package Quotas)
-
 - **Gói 1 Bữa / Ngày (Tuần 1 Bữa, Tháng 1 Bữa):**
   - Khách hàng được quyền chọn **1 trong 2 món** có trong thực đơn của ngày.
   - Sau khi đã đặt 1 món, hệ thống khóa không cho đặt thêm món thứ 2. Nếu muốn đổi món, khách cần hủy món cũ trước 22:00 tối hôm trước.
@@ -295,9 +284,7 @@ erDiagram
   - Ngăn chặn việc đặt trùng lặp cùng một món ăn trong cùng một ngày.
 
 ### 4. Tính Toàn Vẹn Giao Dịch Bữa Ăn (Prisma Atomic Transactions)
-
 Để chống thất thoát số bữa ăn (race conditions):
-
 - **Khi Khách Đặt Món (`POST /api/order/book`):**
   Hệ thống sử dụng `prisma.$transaction` để thực hiện đồng thời:
   1. Tạo bản ghi `Order` và các `OrderItem`.
@@ -314,59 +301,53 @@ erDiagram
 Tất cả các endpoint đều có tiền tố `/api`. Các endpoint có yêu cầu đăng nhập cần đính kèm Header: `Authorization: Bearer <JWT_ACCESS_TOKEN>`.
 
 ### 1. Xác Thực & Người Dùng (`/api/auth`)
-
-| Method | Endpoint             | Quyền     | Mô tả                                        |
-| :----- | :------------------- | :-------- | :------------------------------------------- |
-| `POST` | `/api/auth/register` | Public    | Đăng ký tài khoản mới kèm hồ sơ dinh dưỡng   |
-| `POST` | `/api/auth/login`    | Public    | Đăng nhập hệ thống, trả về Token & User Info |
-| `GET`  | `/api/auth/profile`  | Logged In | Lấy thông tin tài khoản đang đăng nhập       |
-| `GET`  | `/api/auth/getme`    | Logged In | Lấy chi tiết hồ sơ cá nhân                   |
-| `POST` | `/api/auth/refresh`  | Public    | Cấp mới Access Token bằng Refresh Token      |
-| `POST` | `/api/auth/logout`   | Logged In | Đăng xuất và vô hiệu hóa Refresh Token       |
+| Method | Endpoint | Quyền | Mô tả |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/auth/register` | Public | Đăng ký tài khoản mới kèm hồ sơ dinh dưỡng |
+| `POST` | `/api/auth/login` | Public | Đăng nhập hệ thống, trả về Token & User Info |
+| `GET` | `/api/auth/profile` | Logged In | Lấy thông tin tài khoản đang đăng nhập |
+| `GET` | `/api/auth/getme` | Logged In | Lấy chi tiết hồ sơ cá nhân |
+| `POST` | `/api/auth/refresh` | Public | Cấp mới Access Token bằng Refresh Token |
+| `POST` | `/api/auth/logout` | Logged In | Đăng xuất và vô hiệu hóa Refresh Token |
 
 ### 2. Quản Lý Gói Dinh Dưỡng (`/api/plans`)
-
-| Method | Endpoint         | Quyền     | Mô tả                                  |
-| :----- | :--------------- | :-------- | :------------------------------------- |
-| `GET`  | `/api/plans`     | Logged In | Lấy danh mục toàn bộ gói ăn dinh dưỡng |
-| `GET`  | `/api/plans/:id` | Logged In | Lấy thông tin chi tiết một gói ăn      |
+| Method | Endpoint | Quyền | Mô tả |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/plans` | Logged In | Lấy danh mục toàn bộ gói ăn dinh dưỡng |
+| `GET` | `/api/plans/:id` | Logged In | Lấy thông tin chi tiết một gói ăn |
 
 ### 3. Quản Lý Món Ăn (`/api/dish`)
-
-| Method  | Endpoint               | Quyền     | Mô tả                                                  |
-| :------ | :--------------------- | :-------- | :----------------------------------------------------- |
-| `GET`   | `/api/dish`            | Public    | Lấy danh sách tất cả các món ăn (chưa bị xóa)          |
-| `GET`   | `/api/dish/:id`        | Public    | Lấy chi tiết món ăn                                    |
-| `POST`  | `/api/dish`            | Logged In | Tạo món ăn mới (hỗ trợ upload ảnh multipart/form-data) |
-| `PATCH` | `/api/dish/:id`        | Logged In | Cập nhật thông tin và hình ảnh món ăn                  |
-| `PATCH` | `/api/dish/:id/delete` | Logged In | Xóa mềm món ăn (`isDeleted: true`)                     |
+| Method | Endpoint | Quyền | Mô tả |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/dish` | Public | Lấy danh sách tất cả các món ăn (chưa bị xóa) |
+| `GET` | `/api/dish/:id` | Public | Lấy chi tiết món ăn |
+| `POST` | `/api/dish` | Logged In | Tạo món ăn mới (hỗ trợ upload ảnh multipart/form-data) |
+| `PATCH` | `/api/dish/:id` | Logged In | Cập nhật thông tin và hình ảnh món ăn |
+| `PATCH` | `/api/dish/:id/delete` | Logged In | Xóa mềm món ăn (`isDeleted: true`) |
 
 ### 4. Thực Đơn Theo Tuần (`/api/menus`)
-
-| Method   | Endpoint         | Quyền  | Mô tả                                                              |
-| :------- | :--------------- | :----- | :----------------------------------------------------------------- |
-| `GET`    | `/api/menus`     | Public | Lấy danh sách thực đơn (Hỗ trợ query `?startDate=...&endDate=...`) |
-| `GET`    | `/api/menus/:id` | Public | Lấy chi tiết thực đơn theo ID                                      |
-| `POST`   | `/api/menus`     | Admin  | Gán món ăn vào ngày trong tuần                                     |
-| `PATCH`  | `/api/menus/:id` | Admin  | Chỉnh sửa món ăn trong thực đơn                                    |
-| `DELETE` | `/api/menus/:id` | Admin  | Xóa món ăn khỏi thực đơn ngày                                      |
+| Method | Endpoint | Quyền | Mô tả |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/menus` | Public | Lấy danh sách thực đơn (Hỗ trợ query `?startDate=...&endDate=...`) |
+| `GET` | `/api/menus/:id` | Public | Lấy chi tiết thực đơn theo ID |
+| `POST` | `/api/menus` | Admin | Gán món ăn vào ngày trong tuần |
+| `PATCH` | `/api/menus/:id` | Admin | Chỉnh sửa món ăn trong thực đơn |
+| `DELETE`| `/api/menus/:id` | Admin | Xóa món ăn khỏi thực đơn ngày |
 
 ### 5. Đăng Ký & Quản Lý Gói Ăn (`/api/subscriptions`)
-
-| Method  | Endpoint                              | Quyền     | Mô tả                                                              |
-| :------ | :------------------------------------ | :-------- | :----------------------------------------------------------------- |
-| `POST`  | `/api/subscriptions/checkout`         | Logged In | Khách hàng đăng ký mua gói ăn mới                                  |
-| `GET`   | `/api/subscriptions/my-subscriptions` | Logged In | Lấy danh sách gói ăn của người dùng đang đăng nhập                 |
-| `GET`   | `/api/subscriptions`                  | Admin     | Lấy toàn bộ danh sách gói ăn để Admin quản lý                      |
-| `PATCH` | `/api/subscriptions/:id/status`       | Admin     | Cập nhật trạng thái thanh toán gói (`PAID`, `UNPAID`, `CANCELLED`) |
+| Method | Endpoint | Quyền | Mô tả |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/subscriptions/checkout` | Logged In | Khách hàng đăng ký mua gói ăn mới |
+| `GET` | `/api/subscriptions/my-subscriptions`| Logged In | Lấy danh sách gói ăn của người dùng đang đăng nhập |
+| `GET` | `/api/subscriptions` | Admin | Lấy toàn bộ danh sách gói ăn để Admin quản lý |
+| `PATCH` | `/api/subscriptions/:id/status` | Admin | Cập nhật trạng thái thanh toán gói (`PAID`, `UNPAID`, `CANCELLED`) |
 
 ### 6. Đặt Món Hàng Ngày (`/api/order`)
-
-| Method  | Endpoint                | Quyền     | Mô tả                                                              |
-| :------ | :---------------------- | :-------- | :----------------------------------------------------------------- |
-| `POST`  | `/api/order/book`       | Logged In | Đặt món cho ngày giao (Trừ suất ăn nguyên tử qua Transaction)      |
-| `PATCH` | `/api/order/:id/cancel` | Logged In | Hủy đơn món trước 22:00 T-1 (Hoàn trả suất ăn nguyên tử)           |
-| `GET`   | `/api/order/my-orders`  | Logged In | Lấy lịch sử đặt món của khách (Query `?startDate=...&endDate=...`) |
+| Method | Endpoint | Quyền | Mô tả |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/order/book` | Logged In | Đặt món cho ngày giao (Trừ suất ăn nguyên tử qua Transaction) |
+| `PATCH` | `/api/order/:id/cancel` | Logged In | Hủy đơn món trước 22:00 T-1 (Hoàn trả suất ăn nguyên tử) |
+| `GET` | `/api/order/my-orders` | Logged In | Lấy lịch sử đặt món của khách (Query `?startDate=...&endDate=...`) |
 
 ---
 
