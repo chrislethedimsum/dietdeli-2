@@ -151,8 +151,8 @@ export class OrderService {
   }
 
   async cancelMealOrder(userId: number, orderId: number) {
-    // 1. Tìm đơn hàng
-    const order = await this.prisma.order.findUnique({
+    // 1. Tìm đơn hàng của user
+    const order = await this.prisma.order.findFirst({
       where: { id: orderId, userId },
       include: { orderItems: true },
     });
@@ -160,6 +160,12 @@ export class OrderService {
     if (!order || order.status === 'CANCELLED') {
       throw new NotFoundException(
         'Đơn hàng không tồn tại hoặc đã bị hủy trước đó.',
+      );
+    }
+
+    if (order.status !== 'ORDERED') {
+      throw new BadRequestException(
+        'Không thể hủy đơn hàng này vì bếp đã bắt đầu chế biến hoặc đơn đang giao!',
       );
     }
 
