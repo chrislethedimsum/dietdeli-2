@@ -2,7 +2,8 @@ import { useNavigate, Link } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardHeader, Table, Button, Chip } from "@heroui/react";
 import { Calendar, CreditCard, RefreshCw, Plus, UtensilsCrossed, Sparkles, Flame, CheckCircle2, Clock, ArrowRight } from "lucide-react";
-import { subscriptionApi, type UserSubscription } from "../../api/subscription.api";
+import { subscriptionApi, type UserSubscription } from "@/api/subscription.api";
+import { type UserSubscriptionFormData } from "@/pages/user/MealPackagePage/components/EditMealPackageModal";
 
 function getPaymentStatusBadge(status: string) {
   switch (status) {
@@ -43,6 +44,10 @@ const formatDate = (dateString?: string) => {
 };
 
 export default function MealPackagePage() {
+  const handleEditInfo = async (data: DishFormData) => {
+    await addDish(data);
+  };
+
   const navigate = useNavigate();
 
   // 1. Fetch danh sách gói ăn của người dùng
@@ -373,15 +378,25 @@ export default function MealPackagePage() {
                                     <span>Thanh toán ngay</span>
                                   </Button>
                                 ) : (
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    className="text-xs text-emerald-700 border border-emerald-200 hover:bg-emerald-50 inline-flex items-center gap-1 cursor-pointer"
-                                    onClick={() => navigate("/user/registerpackage")}
-                                  >
-                                    <CheckCircle2 size={13} className="text-emerald-600" />
-                                    <span>Gia hạn gói</span>
-                                  </Button>
+                                  <div className="flex flex-col items-center">
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="my-1 text-xs text-emerald-700 border border-emerald-200 hover:bg-emerald-50 inline-flex items-center gap-1 cursor-pointer"
+                                    >
+                                      <CheckCircle2 size={13} className="text-emerald-600" />
+                                      <span>Sửa thông tin</span>
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="my-1 text-xs text-emerald-700 border border-emerald-200 hover:bg-emerald-50 inline-flex items-center gap-1 cursor-pointer"
+                                      onClick={() => navigate("/user/registerpackage")}
+                                    >
+                                      <CheckCircle2 size={13} className="text-emerald-600" />
+                                      <span>Gia hạn gói</span>
+                                    </Button>
+                                  </div>
                                 )}
                               </Table.Cell>
                             </Table.Row>

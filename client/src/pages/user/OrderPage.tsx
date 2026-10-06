@@ -173,9 +173,7 @@ export default function OrderPage() {
    */
   // Active subscription (Must be PAID with remaining meals > 0)
   const activeSubscription = useMemo(() => {
-    return subscriptions.find(
-      (s) => s.paymentStatus === "PAID" && s.remainingMeals > 0,
-    );
+    return subscriptions.find((s) => s.paymentStatus === "PAID" && s.remainingMeals > 0);
   }, [subscriptions]);
 
   const pendingSubscription = useMemo(() => {
@@ -206,10 +204,7 @@ export default function OrderPage() {
       };
     }
 
-    const referenceSub =
-      activeSubscription ||
-      subscriptions.find((s) => s.paymentStatus === "PAID") ||
-      null;
+    const referenceSub = activeSubscription || subscriptions.find((s) => s.paymentStatus === "PAID") || null;
 
     if (!referenceSub) {
       return {
@@ -296,26 +291,16 @@ export default function OrderPage() {
 
   // Find if a specific dish was already booked on that date
   const getBookedOrderForDish = (dateOrders: Order[], dishId: number) => {
-    return dateOrders.find((o) =>
-      o.orderItems.some((item) => item.dishId === dishId),
-    );
+    return dateOrders.find((o) => o.orderItems.some((item) => item.dishId === dishId));
   };
 
   // Số bữa tối đa được đặt trong ngày theo gói (1 bữa/ngày hoặc 2 bữa/ngày)
   const maxMealsPerDay = useMemo(() => {
     const pkgName = (activeSubscription?.package?.name || "").toLowerCase();
-    if (
-      pkgName.includes("2 bữa") ||
-      pkgName.includes("2 bua") ||
-      pkgName.includes("2bữa")
-    ) {
+    if (pkgName.includes("2 bữa") || pkgName.includes("2 bua") || pkgName.includes("2bữa")) {
       return 2;
     }
-    if (
-      pkgName.includes("3 bữa") ||
-      pkgName.includes("3 bua") ||
-      pkgName.includes("3bữa")
-    ) {
+    if (pkgName.includes("3 bữa") || pkgName.includes("3 bua") || pkgName.includes("3bữa")) {
       return 3;
     }
     return 1;
@@ -323,8 +308,7 @@ export default function OrderPage() {
 
   const formatDate = (date?: string | null) => {
     if (!date) return "-";
-    const parsedDate =
-      date.length === 10 ? new Date(`${date}T00:00:00`) : new Date(date);
+    const parsedDate = date.length === 10 ? new Date(`${date}T00:00:00`) : new Date(date);
     if (isNaN(parsedDate.getTime())) return "-";
     return parsedDate.toLocaleDateString("vi-VN", {
       day: "2-digit",
@@ -335,8 +319,7 @@ export default function OrderPage() {
 
   const getDayName = (date?: string | null) => {
     if (!date) return "";
-    const parsedDate =
-      date.length === 10 ? new Date(`${date}T00:00:00`) : new Date(date);
+    const parsedDate = date.length === 10 ? new Date(`${date}T00:00:00`) : new Date(date);
     if (isNaN(parsedDate.getTime())) return "";
     const day = parsedDate.getDay();
     switch (day) {
@@ -488,9 +471,6 @@ export default function OrderPage() {
             <Utensils className="h-7 w-7 text-emerald-600" />
             Đặt món ăn hàng ngày
           </h1>
-          <p className="mt-1 text-sm text-gray-500">
-            Lựa chọn món ăn theo thực đơn tuần từ bếp DietDeli • Chốt món trước 22:00 tối hôm trước
-          </p>
         </div>
 
         {/* Reload button */}
@@ -512,9 +492,7 @@ export default function OrderPage() {
       {feedback && (
         <div
           className={`flex items-start gap-3 rounded-xl border p-4 text-sm transition-all ${
-            feedback.type === "success"
-              ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-              : "border-red-200 bg-red-50 text-red-800"
+            feedback.type === "success" ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-red-200 bg-red-50 text-red-800"
           }`}
         >
           {feedback.type === "success" ? (
@@ -523,11 +501,7 @@ export default function OrderPage() {
             <AlertCircle className="h-5 w-5 shrink-0 text-red-600 mt-0.5" />
           )}
           <div className="flex-1 font-medium">{feedback.message}</div>
-          <button
-            type="button"
-            onClick={() => setFeedback(null)}
-            className="text-gray-400 hover:text-gray-600 cursor-pointer"
-          >
+          <button type="button" onClick={() => setFeedback(null)} className="text-gray-400 hover:text-gray-600 cursor-pointer">
             <XCircle className="h-4 w-4" />
           </button>
         </div>
@@ -548,16 +522,17 @@ export default function OrderPage() {
                   <span className="inline-flex items-center rounded-full bg-emerald-100 text-emerald-800 px-2.5 py-1 text-xs font-semibold">
                     Gói {maxMealsPerDay} Bữa / Ngày
                   </span>
-                  <h2 className="text-lg font-bold text-gray-900">
-                    {activeSubscription.package?.name || "Gói ăn dinh dưỡng"}
-                  </h2>
+                  <h2 className="text-lg font-bold text-gray-900">{activeSubscription.package?.name || "Gói ăn dinh dưỡng"}</h2>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-y-2 gap-x-6 text-xs text-gray-600">
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-emerald-600 shrink-0" />
                     <span>
-                      Hạn dùng: <strong className="text-gray-800">{formatDate(activeSubscription.startDate)} - {formatDate(activeSubscription.endDate)}</strong>
+                      Hạn dùng:{" "}
+                      <strong className="text-gray-800">
+                        {formatDate(activeSubscription.startDate)} - {formatDate(activeSubscription.endDate)}
+                      </strong>
                     </span>
                   </div>
 
@@ -613,11 +588,10 @@ export default function OrderPage() {
             <div className="flex items-start gap-3">
               <Clock className="h-6 w-6 text-amber-600 shrink-0 mt-0.5" />
               <div>
-                <h3 className="font-semibold text-amber-900 text-base">
-                  Gói ăn đang chờ Admin xác nhận thanh toán
-                </h3>
+                <h3 className="font-semibold text-amber-900 text-base">Gói ăn đang chờ Admin xác nhận thanh toán</h3>
                 <p className="text-sm text-amber-700 mt-1">
-                  Đơn đăng ký gói #{pendingSubscription.id} của bạn đang được kiểm tra. Sau khi được duyệt, bạn sẽ có thể đặt món ngay lập tức.
+                  Đơn đăng ký gói #{pendingSubscription.id} của bạn đang được kiểm tra. Sau khi được duyệt, bạn sẽ có thể đặt món ngay lập
+                  tức.
                 </p>
               </div>
             </div>
@@ -635,9 +609,7 @@ export default function OrderPage() {
             <div className="flex items-start gap-3">
               <Package className="h-6 w-6 text-emerald-600 shrink-0 mt-0.5" />
               <div>
-                <h3 className="font-semibold text-gray-900 text-base">
-                  Bạn chưa có gói ăn hoạt động hoặc đã dùng hết số bữa
-                </h3>
+                <h3 className="font-semibold text-gray-900 text-base">Bạn chưa có gói ăn hoạt động hoặc đã dùng hết số bữa</h3>
                 <p className="text-sm text-gray-500 mt-1">
                   Vui lòng đăng ký gói ăn dinh dưỡng để mở tính năng đặt món giao tận nơi hàng ngày.
                 </p>
@@ -660,7 +632,8 @@ export default function OrderPage() {
           <Clock className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
           <div className="text-xs text-blue-900 leading-relaxed">
             <strong className="font-semibold block text-sm mb-0.5">Giờ chốt món hàng ngày (22:00)</strong>
-            Bạn có thể đặt hoặc hủy món ăn cho ngày hôm sau trước <strong>22:00</strong> tối hôm nay. Sau 22:00, bếp sẽ chốt số lượng và chuẩn bị nấu nướng.
+            Bạn có thể đặt hoặc hủy món ăn cho ngày hôm sau trước <strong>22:00</strong> tối hôm nay. Sau 22:00, bếp sẽ chốt số lượng và
+            chuẩn bị nấu nướng.
           </div>
         </div>
 
@@ -668,7 +641,8 @@ export default function OrderPage() {
           <Calendar className="h-5 w-5 text-purple-600 shrink-0 mt-0.5" />
           <div className="text-xs text-purple-900 leading-relaxed">
             <strong className="font-semibold block text-sm mb-0.5">Đặt trước cho cả tuần mới</strong>
-            Từ <strong>23:00 tối Thứ 6</strong> đến <strong>22:00 tối Chủ Nhật</strong>, bạn có thể đặt trước thực đơn cho toàn bộ các ngày trong tuần tiếp theo.
+            Từ <strong>23:00 tối Thứ 6</strong> đến <strong>22:00 tối Chủ Nhật</strong>, bạn có thể đặt trước thực đơn cho toàn bộ các ngày
+            trong tuần tiếp theo.
           </div>
         </div>
       </div>
@@ -687,47 +661,46 @@ export default function OrderPage() {
                 {formatDate(startDate)} — {formatDate(endDate)}
               </p>
             </div>
-
+            <div className="flex items-center gap-1.5 bg-gray-100 p-1 rounded-xl">
+              <button
+                type="button"
+                onClick={() => {
+                  setYear(currentYear);
+                  setWeek(initialWeek);
+                }}
+                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition cursor-pointer ${
+                  week === initialWeek && year === currentYear
+                    ? "bg-white text-emerald-600 shadow-xs font-semibold"
+                    : "text-gray-600 hover:text-gray-900"
+                }`}
+              >
+                Tuần hiện tại
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const nextWeek = initialWeek + 1;
+                  const maxW = getWeeksInYear(currentYear);
+                  if (nextWeek > maxW) {
+                    setYear(currentYear + 1);
+                    setWeek(1);
+                  } else {
+                    setYear(currentYear);
+                    setWeek(nextWeek);
+                  }
+                }}
+                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition cursor-pointer ${
+                  week === initialWeek + 1 && year === currentYear
+                    ? "bg-white text-emerald-600 shadow-xs font-semibold"
+                    : "text-gray-600 hover:text-gray-900"
+                }`}
+              >
+                Tuần tới
+              </button>
+            </div>
             {/* Quick buttons & Select Year / Week */}
             <div className="flex flex-wrap items-center gap-3">
               {/* Quick Jump Buttons */}
-              <div className="flex items-center gap-1.5 bg-gray-100 p-1 rounded-xl">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setYear(currentYear);
-                    setWeek(initialWeek);
-                  }}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-lg transition cursor-pointer ${
-                    week === initialWeek && year === currentYear
-                      ? "bg-white text-emerald-600 shadow-xs font-semibold"
-                      : "text-gray-600 hover:text-gray-900"
-                  }`}
-                >
-                  Tuần hiện tại
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const nextWeek = initialWeek + 1;
-                    const maxW = getWeeksInYear(currentYear);
-                    if (nextWeek > maxW) {
-                      setYear(currentYear + 1);
-                      setWeek(1);
-                    } else {
-                      setYear(currentYear);
-                      setWeek(nextWeek);
-                    }
-                  }}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-lg transition cursor-pointer ${
-                    week === initialWeek + 1 && year === currentYear
-                      ? "bg-white text-emerald-600 shadow-xs font-semibold"
-                      : "text-gray-600 hover:text-gray-900"
-                  }`}
-                >
-                  Tuần tới
-                </button>
-              </div>
 
               {/* Year Select */}
               <Select
@@ -814,10 +787,10 @@ export default function OrderPage() {
                   isFullyBooked
                     ? "border-emerald-300 ring-2 ring-emerald-500/20 bg-white"
                     : dayOrders.length > 0
-                    ? "border-amber-300 ring-2 ring-amber-500/20 bg-white"
-                    : pastDate || !isSubscriptionValid
-                    ? "border-gray-200 bg-gray-50/50"
-                    : "border-gray-200 bg-white"
+                      ? "border-amber-300 ring-2 ring-amber-500/20 bg-white"
+                      : pastDate || !isSubscriptionValid
+                        ? "border-gray-200 bg-gray-50/50"
+                        : "border-gray-200 bg-white"
                 }`}
               >
                 {/* Day Header */}
@@ -826,12 +799,12 @@ export default function OrderPage() {
                     isFullyBooked
                       ? "border-emerald-100 bg-emerald-50/80"
                       : dayOrders.length > 0
-                      ? "border-amber-100 bg-amber-50/70"
-                      : pastDate || !isSubscriptionValid
-                      ? "border-gray-200 bg-gray-100/70"
-                      : orderable
-                      ? "border-gray-100 bg-gray-50"
-                      : "border-gray-200 bg-amber-50/40"
+                        ? "border-amber-100 bg-amber-50/70"
+                        : pastDate || !isSubscriptionValid
+                          ? "border-gray-200 bg-gray-100/70"
+                          : orderable
+                            ? "border-gray-100 bg-gray-50"
+                            : "border-gray-200 bg-amber-50/40"
                   }`}
                 >
                   <div className="flex w-full items-center justify-between gap-3">
@@ -851,34 +824,24 @@ export default function OrderPage() {
                           </span>
                         )}
                       </Card.Title>
-                      <Card.Description className="mt-0.5 text-xs text-gray-500">
-                        {formatDate(day.date)}
-                      </Card.Description>
+                      <Card.Description className="mt-0.5 text-xs text-gray-500">{formatDate(day.date)}</Card.Description>
                     </div>
 
                     {/* Status Badge */}
                     <div>
                       {pastDate ? (
-                        <span className="rounded-full bg-gray-200 px-2.5 py-1 text-xs font-medium text-gray-600">
-                          Đã qua
-                        </span>
+                        <span className="rounded-full bg-gray-200 px-2.5 py-1 text-xs font-medium text-gray-600">Đã qua</span>
                       ) : !isSubscriptionValid ? (
                         subStatus.reason === "before_start" ? (
                           <span className="rounded-full bg-slate-200/80 px-2.5 py-1 text-xs font-medium text-slate-700">
                             Chưa tới hạn gói
                           </span>
                         ) : subStatus.reason === "after_end" ? (
-                          <span className="rounded-full bg-slate-200/80 px-2.5 py-1 text-xs font-medium text-slate-600">
-                            Ngoài hạn gói
-                          </span>
+                          <span className="rounded-full bg-slate-200/80 px-2.5 py-1 text-xs font-medium text-slate-600">Ngoài hạn gói</span>
                         ) : subStatus.reason === "out_of_meals" ? (
-                          <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-800">
-                            Hết suất ăn
-                          </span>
+                          <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-800">Hết suất ăn</span>
                         ) : (
-                          <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-500">
-                            Chưa có gói
-                          </span>
+                          <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-500">Chưa có gói</span>
                         )
                       ) : !orderable ? (
                         <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-800 flex items-center gap-1">
@@ -962,9 +925,7 @@ export default function OrderPage() {
                                   </button>
                                 </>
                               ) : (
-                                <span className="text-[11px] text-gray-500 italic">
-                                  Bếp đã chốt và đang chuẩn bị
-                                </span>
+                                <span className="text-[11px] text-gray-500 italic">Bếp đã chốt và đang chuẩn bị</span>
                               )}
                             </div>
                           </div>
@@ -974,12 +935,7 @@ export default function OrderPage() {
                       // 👉 MÓN NÀY CHƯA ĐẶT
                       const canBookMore = dayOrders.length < maxMealsPerDay;
                       const hasRemainingMeals = Boolean(activeSubscription && activeSubscription.remainingMeals > 0);
-                      const disabledToOrder =
-                        !orderable ||
-                        pastDate ||
-                        !isSubscriptionValid ||
-                        !hasRemainingMeals ||
-                        !canBookMore;
+                      const disabledToOrder = !orderable || pastDate || !isSubscriptionValid || !hasRemainingMeals || !canBookMore;
 
                       // Ca ăn gợi ý
                       const hasLunch = dayOrders.some((o) => o.mealShift === "LUNCH");
@@ -1026,10 +982,10 @@ export default function OrderPage() {
                               {subStatus.reason === "before_start"
                                 ? `Gói áp dụng từ ${formatDate(activeSubscription?.startDate)}`
                                 : subStatus.reason === "after_end"
-                                ? `Gói kết thúc ngày ${formatDate(activeSubscription?.endDate)}`
-                                : subStatus.reason === "out_of_meals"
-                                ? "Đã hết số suất trong gói"
-                                : "Cần gói ăn để đặt"}
+                                  ? `Gói kết thúc ngày ${formatDate(activeSubscription?.endDate)}`
+                                  : subStatus.reason === "out_of_meals"
+                                    ? "Đã hết số suất trong gói"
+                                    : "Cần gói ăn để đặt"}
                             </span>
                           ) : orderable && !pastDate ? (
                             canBookMore ? (
@@ -1039,15 +995,11 @@ export default function OrderPage() {
                                 onClick={() => handleOpenBookingModal(day.date, dish, suggestedShift)}
                                 className="w-full sm:w-auto shrink-0 cursor-pointer rounded-lg bg-emerald-600 px-3.5 py-2 text-xs font-semibold text-white shadow-2xs hover:bg-emerald-700 active:scale-98 transition disabled:opacity-50 disabled:cursor-not-allowed text-center"
                               >
-                                {maxMealsPerDay === 2 && dayOrders.length === 1
-                                  ? `Đặt món (${shiftName})`
-                                  : "Đặt món này"}
+                                {maxMealsPerDay === 2 && dayOrders.length === 1 ? `Đặt món (${shiftName})` : "Đặt món này"}
                               </button>
                             ) : (
                               <span className="text-[11px] font-medium text-gray-400 self-end sm:self-center">
-                                {maxMealsPerDay === 1
-                                  ? "Đã chọn 1 món (Gói 1 bữa/ngày)"
-                                  : "Đã chọn đủ 2 món trong ngày"}
+                                {maxMealsPerDay === 1 ? "Đã chọn 1 món (Gói 1 bữa/ngày)" : "Đã chọn đủ 2 món trong ngày"}
                               </span>
                             )
                           ) : (
@@ -1070,8 +1022,8 @@ export default function OrderPage() {
                         {subStatus.reason === "before_start"
                           ? `Gói áp dụng từ ${formatDate(activeSubscription?.startDate)}`
                           : subStatus.reason === "after_end"
-                          ? `Gói kết thúc ngày ${formatDate(activeSubscription?.endDate)}`
-                          : "Ngoài thời hạn áp dụng gói"}
+                            ? `Gói kết thúc ngày ${formatDate(activeSubscription?.endDate)}`
+                            : "Ngoài thời hạn áp dụng gói"}
                       </span>
                     ) : isFullyBooked ? (
                       <span className="text-emerald-700 font-semibold">
@@ -1082,9 +1034,7 @@ export default function OrderPage() {
                         Đã đặt {dayOrders.length}/{maxMealsPerDay} bữa
                       </span>
                     ) : orderable && !pastDate ? (
-                      <span className="text-emerald-600 font-medium">
-                        Chưa chọn món (0/{maxMealsPerDay})
-                      </span>
+                      <span className="text-emerald-600 font-medium">Chưa chọn món (0/{maxMealsPerDay})</span>
                     ) : (
                       <span className="text-gray-400">Đã kết thúc nhận đặt</span>
                     )}
@@ -1143,9 +1093,7 @@ export default function OrderPage() {
                 <h4 className="font-bold text-gray-900 text-sm truncate">{bookingTarget.dish.nameVi}</h4>
                 <p className="text-xs text-gray-500 truncate">{bookingTarget.dish.nameEn}</p>
                 {bookingTarget.dish.calories && (
-                  <p className="text-xs text-amber-600 font-semibold mt-1">
-                    {bookingTarget.dish.calories} kcal
-                  </p>
+                  <p className="text-xs text-amber-600 font-semibold mt-1">{bookingTarget.dish.calories} kcal</p>
                 )}
               </div>
             </div>
@@ -1169,8 +1117,8 @@ export default function OrderPage() {
                       bookingTarget.shift === "LUNCH"
                         ? "bg-emerald-600 text-white font-semibold shadow-2xs"
                         : getActiveOrdersByDate(bookingTarget.date).some((o) => o.mealShift === "LUNCH")
-                        ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                        : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
+                          ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                          : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
                     }`}
                   >
                     Bữa trưa
@@ -1183,8 +1131,8 @@ export default function OrderPage() {
                       bookingTarget.shift === "DINNER"
                         ? "bg-emerald-600 text-white font-semibold shadow-2xs"
                         : getActiveOrdersByDate(bookingTarget.date).some((o) => o.mealShift === "DINNER")
-                        ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                        : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
+                          ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                          : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
                     }`}
                   >
                     Bữa tối
@@ -1205,9 +1153,8 @@ export default function OrderPage() {
 
             {/* Meal deduction reminder */}
             <div className="rounded-xl border border-emerald-100 bg-emerald-50/60 p-3 text-xs text-emerald-800 leading-relaxed">
-              💡 Thao tác này sẽ trừ <strong>1 bữa ăn</strong> trong gói{" "}
-              <strong>{activeSubscription?.package?.name}</strong> của bạn (còn lại:{" "}
-              {activeSubscription ? activeSubscription.remainingMeals - 1 : 0} bữa).
+              💡 Thao tác này sẽ trừ <strong>1 bữa ăn</strong> trong gói <strong>{activeSubscription?.package?.name}</strong> của bạn (còn
+              lại: {activeSubscription ? activeSubscription.remainingMeals - 1 : 0} bữa).
             </div>
           </div>
         </CommonModal>

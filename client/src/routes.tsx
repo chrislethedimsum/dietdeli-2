@@ -15,9 +15,9 @@ import MenuPage from "@/pages/admin/MenuPage";
 import { useAuthStore } from "./store/useAuthStore";
 import Register from "./pages/Register";
 import ConsultationRoute from "./components/auth/ConsultationRoute";
-import PaymentPage from "./pages/user/PaymentPage";
-import MealPackagePage from "./pages/user/MealPackagePage";
-import RegisterMealPackagePage from "./pages/user/RegisterMealPackagePage";
+import PaymentPage from "./pages/user/MealPackagePage/PaymentPage";
+import MealPackagePage from "./pages/user/MealPackagePage/MealPackagePage";
+import RegisterMealPackagePage from "./pages/user/MealPackagePage/RegisterMealPackagePage";
 import OrderPage from "@/pages/user/OrderPage";
 
 const requireAuth = (Component: React.ComponentType) => {

@@ -17,9 +17,9 @@ import {
   AlertCircle,
   HelpCircle,
 } from "lucide-react";
-import { useAuthStore } from "../../store/useAuthStore";
-import { useConsultationStore } from "../../store/useConsultationStore";
-import { subscriptionApi, type MealPackage } from "../../api/subscription.api";
+import { useAuthStore } from "@/store/useAuthStore";
+import { useConsultationStore } from "@/store/useConsultationStore";
+import { subscriptionApi, type MealPackage } from "@/api/subscription.api";
 
 type DurationType = "ngay" | "tuan" | "thang";
 type MealOptionType = "1_meal" | "2_meals";

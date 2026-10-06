@@ -53,7 +53,9 @@ export class OrderService {
           );
         }
         if (anyPaidSub.startDate > endOfDay) {
-          const startFormatted = anyPaidSub.startDate.toISOString().slice(0, 10);
+          const startFormatted = anyPaidSub.startDate
+            .toISOString()
+            .slice(0, 10);
           throw new BadRequestException(
             `Ngày đặt món (${dateStr}) chưa tới thời hạn bắt đầu của gói ăn (Gói bắt đầu từ ngày ${startFormatted}).`,
           );
@@ -138,32 +140,109 @@ export class OrderService {
 
     // 4. Thực hiện đặt món và trừ suất ăn an toàn bằng Prisma Transaction
     return this.prisma.$transaction(async (tx) => {
-      // a. Tạo bản ghi đơn hàng ngày
-      const order = await tx.order.create({
-        data: {
+      // a. Tìm xem có đơn nào đã hủy (CANCELLED) trong ngày để tái sử dụng thay vì tạo mới
+      const cancelledOrdersOnDay = await tx.order.findMany({
+        where: {
           userId,
-          userSubscriptionId: subscription.id,
-          packageId: subscription.packageId,
-          deliveryDate,
-          mealShift: assignedShift,
-          shippingAddress: subscription.planShippingAddress || '',
-          shippingNote: subscription.userNote,
-          status: 'ORDERED',
-          orderItems: {
-            create: dto.items.map((item) => ({
+          deliveryDate: {
+            gte: startOfDay,
+            lte: endOfDay,
+          },
+          status: 'CANCELLED',
+        },
+        include: {
+          orderItems: true,
+        },
+        orderBy: {
+          updatedAt: 'desc',
+        },
+      });
+
+      // Ưu tiên 1: Đơn đã hủy của chính món này
+      let reusableOrder = cancelledOrdersOnDay.find((ord) =>
+        ord.orderItems.some((item) => item.dishId === newDishId),
+      );
+
+      // Ưu tiên 2: Đơn đã hủy cùng ca ăn (mealShift)
+      if (!reusableOrder) {
+        reusableOrder = cancelledOrdersOnDay.find(
+          (ord) => ord.mealShift === assignedShift,
+        );
+      }
+
+      let order;
+
+      if (reusableOrder) {
+        // Tái sử dụng đơn cũ: cập nhật trạng thái từ CANCELLED -> ORDERED
+        const isItemsSame =
+          reusableOrder.orderItems.length === dto.items.length &&
+          dto.items.every((dItem) =>
+            reusableOrder.orderItems.some(
+              (oItem) =>
+                oItem.dishId === dItem.dishId &&
+                oItem.quantity === dItem.quantity,
+            ),
+          );
+
+        if (!isItemsSame) {
+          await tx.orderItem.deleteMany({
+            where: { orderId: reusableOrder.id },
+          });
+          await tx.orderItem.createMany({
+            data: dto.items.map((item) => ({
+              orderId: reusableOrder.id,
               dishId: item.dishId,
               quantity: item.quantity,
             })),
+          });
+        }
+
+        order = await tx.order.update({
+          where: { id: reusableOrder.id },
+          data: {
+            status: 'ORDERED',
+            mealShift: assignedShift,
+            userSubscriptionId: subscription.id,
+            packageId: subscription.packageId,
+            shippingAddress: subscription.planShippingAddress || '',
+            shippingNote: subscription.userNote,
           },
-        },
-        include: {
-          orderItems: {
-            include: {
-              dish: true,
+          include: {
+            orderItems: {
+              include: {
+                dish: true,
+              },
             },
           },
-        },
-      });
+        });
+      } else {
+        // Tạo bản ghi đơn hàng mới nếu chưa có đơn nào bị hủy
+        order = await tx.order.create({
+          data: {
+            userId,
+            userSubscriptionId: subscription.id,
+            packageId: subscription.packageId,
+            deliveryDate,
+            mealShift: assignedShift,
+            shippingAddress: subscription.planShippingAddress || '',
+            shippingNote: subscription.userNote,
+            status: 'ORDERED',
+            orderItems: {
+              create: dto.items.map((item) => ({
+                dishId: item.dishId,
+                quantity: item.quantity,
+              })),
+            },
+          },
+          include: {
+            orderItems: {
+              include: {
+                dish: true,
+              },
+            },
+          },
+        });
+      }
 
       // b. Trừ số bữa ăn trong gói
       await tx.userSubscription.update({
