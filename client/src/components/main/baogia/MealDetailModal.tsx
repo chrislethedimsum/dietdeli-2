@@ -1,6 +1,6 @@
 import { Button, Modal } from "@heroui/react";
 import { Info, Utensils, CheckCircle2, Clock } from "lucide-react";
-import { type MealCardData } from "../../../../data/mealPackages";
+import { type MealCardData } from "@/data/mealPackages";
 
 interface MealDetailModalProps {
   data?: MealCardData;

@@ -3,7 +3,7 @@ import type { EmblaOptionsType } from "embla-carousel";
 import useEmblaCarousel from "embla-carousel-react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Card from "./Card";
-import { MEAL_PACKAGES, type MealCardData } from "../../../../data/mealPackages";
+import { MEAL_PACKAGES, type MealCardData } from "@/data/mealPackages";
 
 type PropType = {
   slides?: MealCardData[] | number[];
@@ -75,19 +75,13 @@ export default function EmblaCarousel(props: PropType) {
   return (
     <div className="relative w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 overflow-hidden">
       {/* 1. Viewport: Trên desktop bật hiệu ứng mờ 2 mép, trên mobile tắt mask để không làm mờ/cụt viền card */}
-      <div
-        className="overflow-hidden md:[mask-image:linear-gradient(to_right,transparent,black_4%,black_96%,transparent)]"
-        ref={emblaRef}
-      >
+      <div className="overflow-hidden md:[mask-image:linear-gradient(to_right,transparent,black_4%,black_96%,transparent)]" ref={emblaRef}>
         {/* Container */}
         <div className="flex -ml-4 sm:-ml-6 touch-pan-y">
           {loopSlides.map((item, index) => {
             const cardData = typeof item === "object" ? item : MEAL_PACKAGES[item % MEAL_PACKAGES.length];
             return (
-              <div
-                key={index}
-                className="flex-[0_0_100%] sm:flex-[0_0_50%] lg:flex-[0_0_33.333%] min-w-0 pl-4 sm:pl-6 py-4"
-              >
+              <div key={index} className="flex-[0_0_100%] sm:flex-[0_0_50%] lg:flex-[0_0_33.333%] min-w-0 pl-4 sm:pl-6 py-4">
                 <Card data={cardData} index={index % originalCount} />
               </div>
             );

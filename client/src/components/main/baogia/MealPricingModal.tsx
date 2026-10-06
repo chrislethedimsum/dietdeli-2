@@ -17,8 +17,8 @@ import {
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { Calculator, FaceSlightlySmiling, AlertCircle } from "lucide-react";
-import { type MealCardData } from "../../../../data/mealPackages";
-import { useConsultationStore } from "../../../../store/useConsultationStore";
+import { type MealCardData } from "@/data/mealPackages";
+import { useConsultationStore } from "@/store/useConsultationStore";
 
 interface MealPricingModalProps {
   data?: MealCardData;

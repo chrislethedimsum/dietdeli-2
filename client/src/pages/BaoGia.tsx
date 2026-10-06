@@ -1,4 +1,4 @@
-import EmblaCarousel from "../components/main/baogia/MealCarousel/EmblaCarousel";
+import EmblaCarousel from "../components/main/baogia/EmblaCarousel";
 import { MEAL_PACKAGES } from "../data/mealPackages";
 import type { EmblaOptionsType } from "embla-carousel";
 
