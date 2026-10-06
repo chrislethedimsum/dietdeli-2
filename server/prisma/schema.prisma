@@ -104,10 +104,6 @@ model UserSubscription {
   @@map("user_subscription")
 }
 
-enum MealShift {
-  LUNCH   // Bữa trưa
-  DINNER  // Bữa tối
-}
 enum OrderStatus {
   ORDERED    // Đã đặt món
   COOKING    // Đang chuẩn bị
@@ -122,7 +118,6 @@ model Order {
   packageId          Int              @map("package_id")
 
   deliveryDate       DateTime         @map("delivery_date") // Ngày nhận món
-  mealShift          MealShift        @default(LUNCH) @map("meal_shift")
   
   shippingAddress    String           @map("shipping_address")
   shippingNote       String?          @map("shipping_note")
@@ -138,11 +133,17 @@ model Order {
   @@map("order")
 }
 
+enum MealShift {
+  LUNCH   // Bữa trưa
+  DINNER  // Bữa tối
+}
+
 model OrderItem {
   id        Int      @id @default(autoincrement())
   orderId   Int      @map("order_id")
   dishId    Int      @map("dish_id")
   quantity  Int
+  mealShift          MealShift        @default(LUNCH) @map("meal_shift")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
   dish      Dish     @relation(fields: [dishId], references: [id])

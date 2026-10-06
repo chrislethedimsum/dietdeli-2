@@ -44,8 +44,8 @@ const formatDate = (dateString?: string) => {
 };
 
 export default function MealPackagePage() {
-  const handleEditInfo = async (data: DishFormData) => {
-    await addDish(data);
+  const handleEditInfo = async (data: UserSubscriptionFormData) => {
+    await editUserSubscription(data);
   };
 
   const navigate = useNavigate();
