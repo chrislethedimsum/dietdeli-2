@@ -110,11 +110,12 @@ enum MealShift {
 }
 
 enum OrderStatus {
-  ORDERED    // Đã đặt món
-  COOKING    // Đang chuẩn bị
-  SHIPPING   // Đang giao
-  COMPLETED  // Đã giao thành công
-  CANCELLED  // Đã hủy món (hoàn suất ăn)
+  ORDERED           // Đã đặt món
+  COOKING           // Đang chuẩn bị
+  SHIPPING          // Đang giao
+  COMPLETED         // Đã giao thành công
+  CANCELLED         // Khách hủy món (hoàn suất ăn)
+  REJECTED          // Admin / Bếp hủy đơn (hoàn suất ăn + thông báo khách)
 }
 
 model Order {
