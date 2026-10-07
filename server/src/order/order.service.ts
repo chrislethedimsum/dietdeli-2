@@ -24,12 +24,19 @@ export class OrderService {
       );
     }
 
+    // Tính toán số suất ăn thực tế cần trừ từ danh sách món ăn
+    const itemsTotalMeals = dto.items.reduce(
+      (sum, item) => sum + item.quantity,
+      0,
+    );
+    const mealsToDeduct = Math.max(dto.totalMealsToDeduct, itemsTotalMeals);
+
     // 2. Kiểm tra gói ăn: Phải PAID, còn bữa, và ngày giao nằm trong thời hạn gói
     const subscription = await this.prisma.userSubscription.findFirst({
       where: {
         idUser: userId,
         paymentStatus: 'PAID', // 👈 BẮT BUỘC ĐÃ ĐƯỢC ADMIN DUYỆT
-        remainingMeals: { gte: dto.totalMealsToDeduct }, // Đủ suất ăn để trừ
+        remainingMeals: { gte: mealsToDeduct }, // Đủ suất ăn để trừ
         startDate: { lte: endOfDay },
         endDate: { gte: startOfDay },
       },
@@ -47,7 +54,7 @@ export class OrderService {
       });
 
       if (anyPaidSub) {
-        if (anyPaidSub.remainingMeals < dto.totalMealsToDeduct) {
+        if (anyPaidSub.remainingMeals < mealsToDeduct) {
           throw new BadRequestException(
             `Gói ăn "${anyPaidSub.package?.name || ''}" của bạn đã sử dụng hết số suất ăn khả dụng!`,
           );
@@ -104,7 +111,7 @@ export class OrderService {
     );
 
     // Kiểm tra giới hạn số bữa trong ngày theo gói
-    if (totalMealsAlreadyBooked + dto.totalMealsToDeduct > maxMealsPerDay) {
+    if (totalMealsAlreadyBooked + mealsToDeduct > maxMealsPerDay) {
       if (maxMealsPerDay === 1) {
         throw new BadRequestException(
           'Gói của bạn là gói 1 Bữa / Ngày và bạn đã đặt 1 món cho ngày này rồi. Vui lòng hủy món đã đặt trước 22:00 hôm trước nếu muốn đổi sang món khác!',
@@ -117,9 +124,9 @@ export class OrderService {
     }
 
     // Không cho đặt trùng một món 2 lần trong cùng một ngày
-    const newDishId = dto.items[0]?.dishId;
+    const incomingDishIds = dto.items.map((item) => item.dishId);
     const hasAlreadyOrderedThisDish = existingOrdersOnDay.some((ord) =>
-      ord.orderItems.some((item) => item.dishId === newDishId),
+      ord.orderItems.some((item) => incomingDishIds.includes(item.dishId)),
     );
     if (hasAlreadyOrderedThisDish) {
       throw new BadRequestException(
@@ -160,7 +167,7 @@ export class OrderService {
 
       // Ưu tiên 1: Đơn đã hủy của chính món này
       let reusableOrder = cancelledOrdersOnDay.find((ord) =>
-        ord.orderItems.some((item) => item.dishId === newDishId),
+        ord.orderItems.some((item) => incomingDishIds.includes(item.dishId)),
       );
 
       // Ưu tiên 2: Đơn đã hủy cùng ca ăn (mealShift)
@@ -248,7 +255,7 @@ export class OrderService {
       await tx.userSubscription.update({
         where: { id: subscription.id },
         data: {
-          remainingMeals: { decrement: dto.totalMealsToDeduct },
+          remainingMeals: { decrement: mealsToDeduct },
         },
       });
 

@@ -1,11 +1,9 @@
 export class OrderTimeValidator {
   /**
    * Quy tắc ngày thường:
-   * Muốn đặt/hủy món cho ngày DeliveryDate thì phải làm TRƯỚC 22:00 của ngày hôm trước (DeliveryDate - 1).
+   * Muốn đặt/hủy món cho ngày DeliveryDate thì phải làm TRƯỚC 22:00 (giờ VN, UTC+7) của ngày hôm trước (DeliveryDate - 1).
    */
   static validateDailyCutoff(deliveryDate: Date | string): boolean {
-    const now = new Date();
-
     let year: number;
     let month: number;
     let day: number;
@@ -22,28 +20,31 @@ export class OrderTimeValidator {
       day = d.getUTCDate();
     }
 
-    // Mốc cutoff = 22:00 của ngày hôm trước ngày giao
-    const cutoffTime = new Date(year, month, day - 1, 22, 0, 0, 0);
+    // 22:00 tối tại Việt Nam (UTC+7) = 15:00:00 UTC của ngày hôm trước ngày giao hàng
+    // Ví dụ: Giao ngày 08/10 -> Cutoff là 22:00 ngày 07/10 (giờ VN) = 15:00:00 UTC ngày 07/10
+    const cutoffTimeMs = Date.UTC(year, month, day - 1, 15, 0, 0, 0);
 
     // Nếu thời gian hiện tại đã vượt quá cutoffTime -> Từ chối
-    return now <= cutoffTime;
+    return Date.now() <= cutoffTimeMs;
   }
 
   /**
    * Quy tắc đặt cả tuần mới (Thứ 2 đến Thứ 7/CN):
-   * Khung giờ mở: Từ 23h00 tối Thứ 6 đến trước 22h00 tối Chủ Nhật.
+   * Khung giờ mở (giờ VN, UTC+7): Từ 23h00 tối Thứ 6 đến trước 22h00 tối Chủ Nhật.
    */
   static isWeeklyBookingWindowOpen(): boolean {
-    const now = new Date();
-    const day = now.getDay(); // 0: Chủ Nhật, 5: Thứ 6, 6: Thứ 7
-    const hour = now.getHours();
+    // Chuyển thời gian hiện tại sang giờ Việt Nam (UTC+7)
+    const vnTime = new Date(Date.now() + 7 * 60 * 60 * 1000);
+    const day = vnTime.getUTCDay(); // 0: Chủ Nhật, 5: Thứ 6, 6: Thứ 7
+    const hour = vnTime.getUTCHours();
+    const minute = vnTime.getUTCMinutes();
 
     // Tối Thứ 6 từ 23:00 trở đi
     if (day === 5 && hour >= 23) return true;
     // Cả ngày Thứ 7
     if (day === 6) return true;
     // Chủ nhật trước 22:00
-    if (day === 0 && (hour < 22 || (hour === 22 && now.getMinutes() === 0)))
+    if (day === 0 && (hour < 22 || (hour === 22 && minute === 0)))
       return true;
 
     return false;

@@ -1,4 +1,5 @@
 import {
+  ArrayMinSize,
   IsArray,
   IsDateString,
   IsEnum,
@@ -39,6 +40,7 @@ export class BookMealDto {
   totalMealsToDeduct: number;
 
   @IsArray({ message: 'Danh sách món ăn phải là một mảng' })
+  @ArrayMinSize(1, { message: 'Vui lòng chọn ít nhất 1 món ăn' })
   @ValidateNested({ each: true })
   @Type(() => OrderItemDto)
   items: OrderItemDto[];
