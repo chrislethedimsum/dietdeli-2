@@ -9,7 +9,7 @@ import GuestRoute from "./components/auth/GuestRoute";
 import DashboardPage from "./pages/admin/DashboardPage";
 import UserDashboardPage from "./pages/user/UserDashboardPage";
 import CustomersPage from "./pages/admin/CustomersPage";
-import OrdersPage from "./pages/admin/OrdersPage";
+import OrdersPage from "@/pages/admin/Orderpage";
 import DishesPage from "@/pages/admin/DishesPage";
 import MenuPage from "@/pages/admin/MenuPage";
 import { useAuthStore } from "./store/useAuthStore";

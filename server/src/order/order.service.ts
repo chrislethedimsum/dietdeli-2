@@ -6,6 +6,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service.js';
 import { OrderTimeValidator } from '../utils/order-time.util.js';
 import { BookMealDto } from './dto/BookMealDto.dto.js';
+import { OrderStatus } from '@prisma/client';
 
 @Injectable()
 export class OrderService {
@@ -344,6 +345,63 @@ export class OrderService {
       orderBy: {
         deliveryDate: 'asc',
       },
+    });
+  }
+
+  async getAllOrdersForAdmin() {
+    return this.prisma.order.findMany({
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+            dob: true,
+            address: true,
+            gender: true,
+            height: true,
+            weight: true,
+          },
+        },
+        package: true,
+        orderItems: {
+          include: {
+            dish: true,
+          },
+        },
+      },
+      orderBy: {
+        deliveryDate: 'asc',
+      },
+    });
+  }
+
+  async updateOrderStatus(orderId: number, newStatus: OrderStatus) {
+    const validStatuses = [
+      'ORDERED',
+      'COOKING',
+      'REJECTED',
+      'SHIPPING',
+      'COMPLETED',
+      'CANCELLED',
+    ];
+
+    if (!validStatuses.includes(newStatus)) {
+      throw new BadRequestException('Trạng thái đơn hàng không hợp lệ!');
+    }
+
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+    });
+
+    if (!order) {
+      throw new NotFoundException('Đơn hàng không tồn tại!');
+    }
+
+    return this.prisma.order.update({
+      where: { id: orderId },
+      data: { status: newStatus },
     });
   }
 }
