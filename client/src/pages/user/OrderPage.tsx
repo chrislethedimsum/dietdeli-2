@@ -637,7 +637,7 @@ export default function OrderPage() {
       )}
 
       {/* ================= Rules Reminder Box ================= */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-5">
         <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-4 flex items-start gap-3">
           <Clock className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
           <div className="text-xs text-blue-900 leading-relaxed">
