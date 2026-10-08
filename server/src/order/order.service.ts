@@ -43,6 +43,7 @@ export class OrderService {
       },
       include: {
         package: true,
+        user: true,
       },
     });
 
@@ -80,6 +81,13 @@ export class OrderService {
         'Bạn không có gói ăn hợp lệ đã thanh toán hoặc đã hết số bữa ăn khả dụng!',
       );
     }
+
+    const finalAddress =
+      dto.shippingAddress?.trim() || subscription.planShippingAddress || '';
+    const finalPhone =
+      dto.shippingPhone?.trim() || subscription.planPhone || null;
+    const finalNote =
+      dto.shippingNote !== undefined ? dto.shippingNote : subscription.userNote;
 
     // Xác định số bữa tối đa/ngày dựa theo tên gói ăn (1 Bữa / Ngày hoặc 2 Bữa / Ngày)
     const pkgName = (subscription.package?.name || '').toLowerCase();
@@ -212,8 +220,9 @@ export class OrderService {
             mealShift: assignedShift,
             userSubscriptionId: subscription.id,
             packageId: subscription.packageId,
-            shippingAddress: subscription.planShippingAddress || '',
-            shippingNote: subscription.userNote,
+            shippingAddress: finalAddress,
+            shippingPhone: finalPhone,
+            shippingNote: finalNote,
           },
           include: {
             orderItems: {
@@ -232,8 +241,9 @@ export class OrderService {
             packageId: subscription.packageId,
             deliveryDate,
             mealShift: assignedShift,
-            shippingAddress: subscription.planShippingAddress || '',
-            shippingNote: subscription.userNote,
+            shippingAddress: finalAddress,
+            shippingPhone: finalPhone,
+            shippingNote: finalNote,
             status: 'ORDERED',
             orderItems: {
               create: dto.items.map((item) => ({

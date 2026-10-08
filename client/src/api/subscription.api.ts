@@ -55,6 +55,17 @@ export interface CheckoutPayload {
   planPhone?: string;
 }
 
+export interface UpdateSubscriptionPayload {
+  planShippingAddress?: string;
+  planPhone?: string;
+  userNote?: string;
+}
+
+export interface UpdateSubscriptionResponse {
+  message: string;
+  subscription: UserSubscription;
+}
+
 export const subscriptionApi = {
   getMySubscriptions: async (): Promise<UserSubscription[]> => {
     const response = await axiosClient.get<UserSubscription[]>("/subscriptions/my-subscriptions");
@@ -68,6 +79,11 @@ export const subscriptionApi = {
 
   checkout: async (data: CheckoutPayload): Promise<CheckoutResponse> => {
     const response = await axiosClient.post<CheckoutResponse>("/subscriptions/checkout", data);
+    return response.data;
+  },
+
+  updateSubscription: async (id: number, data: UpdateSubscriptionPayload): Promise<UpdateSubscriptionResponse> => {
+    const response = await axiosClient.patch<UpdateSubscriptionResponse>(`/subscriptions/${id}`, data);
     return response.data;
   },
 };

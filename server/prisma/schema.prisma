@@ -129,6 +129,7 @@ model Order {
   
   shippingAddress    String           @map("shipping_address")
   shippingNote       String?          @map("shipping_note")
+  shippingPhone      String?          @map("shipping_phone")
   status             OrderStatus      @default(ORDERED)
   
   createdAt          DateTime         @default(now()) @map("created_at")

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
-import { Card, Label, ListBox, Select, Button } from "@heroui/react";
+import { Card, Label, ListBox, Select, Button, Input } from "@heroui/react";
 import {
   Utensils,
   Clock,
@@ -17,6 +17,7 @@ import {
   ShieldCheck,
   ChevronRight,
   RefreshCw,
+  MapPinHouse,
 } from "lucide-react";
 
 import { getMenusByDateRange, type Menu } from "@/api/menu.api";
@@ -91,7 +92,7 @@ export default function OrderPage() {
     const monday = new Date(mondayOfWeek1);
     monday.setDate(mondayOfWeek1.getDate() + (week - 1) * 7);
 
-    return Array.from({ length: 7 }, (_, index) => {
+    return Array.from({ length: 6 }, (_, index) => {
       const date = new Date(monday);
       date.setDate(monday.getDate() + index);
       return formatLocalDate(date);
@@ -99,7 +100,7 @@ export default function OrderPage() {
   }, [year, week]);
 
   const startDate = selectedWeekDates[0];
-  const endDate = selectedWeekDates[6];
+  const endDate = selectedWeekDates[5];
 
   const years = useMemo(() => {
     return Array.from({ length: 5 }, (_, index) => currentYear - 1 + index);
@@ -192,6 +193,9 @@ export default function OrderPage() {
       return subStart <= dayEnd && subEnd >= dayStart;
     });
   };
+  const [customShippingAddress, setCustomShippingAddress] = useState("");
+  const [customShippingPhone, setCustomShippingPhone] = useState("");
+  const [customShippingNote, setCustomShippingNote] = useState("");
 
   // Kiểm tra chi tiết trạng thái áp dụng gói ăn cho ngày dateStr
   const checkDateSubscriptionStatus = (dateStr: string) => {
@@ -390,6 +394,9 @@ export default function OrderPage() {
       });
       return;
     }
+    setCustomShippingAddress(activeSubscription.planShippingAddress || "");
+    setCustomShippingPhone(activeSubscription.planPhone || "");
+    setCustomShippingNote(activeSubscription.userNote || "");
     setBookingTarget({ date, dish, shift });
   };
 
@@ -403,6 +410,9 @@ export default function OrderPage() {
         mealShift: bookingTarget.shift,
         totalMealsToDeduct: 1,
         items: [{ dishId: bookingTarget.dish.id, quantity: 1 }],
+        shippingAddress: customShippingAddress,
+        shippingPhone: customShippingPhone,
+        shippingNote: customShippingNote,
       });
 
       setFeedback({
@@ -463,7 +473,7 @@ export default function OrderPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-12">
+    <div className="space-y-6 mx-auto pb-12">
       {/* ================= Header ================= */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -627,7 +637,7 @@ export default function OrderPage() {
       )}
 
       {/* ================= Rules Reminder Box ================= */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-4 flex items-start gap-3">
           <Clock className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
           <div className="text-xs text-blue-900 leading-relaxed">
@@ -771,7 +781,7 @@ export default function OrderPage() {
           <p className="text-sm font-medium text-gray-500">Đang tải thực đơn và đơn đặt món...</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-5">
           {menuDays.map((day) => {
             const pastDate = isPastDate(day.date);
             const orderable = isDateOrderable(day.date);
@@ -872,7 +882,6 @@ export default function OrderPage() {
                     day.dishes.map((menuItem) => {
                       const dish = menuItem.dish;
                       const bookedOrder = getBookedOrderForDish(dayOrders, dish.id);
-
                       if (bookedOrder) {
                         // 👉 MÓN NÀY ĐÃ ĐƯỢC USER ĐẶT
                         return (
@@ -880,6 +889,7 @@ export default function OrderPage() {
                             key={menuItem.id}
                             className="flex flex-col gap-2 rounded-xl border border-emerald-300 bg-emerald-50/70 p-3 shadow-xs"
                           >
+                            {/* 1. Phần ảnh & tên món */}
                             <div className="flex items-center gap-3 min-w-0">
                               {dish.image ? (
                                 <img
@@ -901,16 +911,19 @@ export default function OrderPage() {
                                   </span>
                                 </div>
                                 <p className="truncate text-xs text-gray-500">{dish.nameEn}</p>
-                                {dish.calories && (
-                                  <div className="mt-0.5 flex items-center gap-1 text-xs text-amber-600 font-medium">
-                                    <Flame className="h-3 w-3 shrink-0" />
-                                    <span>{dish.calories} kcal</span>
-                                  </div>
-                                )}
                               </div>
                             </div>
 
-                            {/* Cancel button if before cutoff */}
+                            {/* 👉👉👉 ĐẶT ĐOẠN CODE ĐÓ VÀO NGAY ĐÂY 👈👈👈 */}
+                            <div className="rounded-lg bg-emerald-100/60 p-2 text-[11px] text-emerald-900 space-y-0.5">
+                              <p className="truncate font-medium">📍 Giao tới: {bookedOrder.shippingAddress || "Theo gói ăn"}</p>
+                              {bookedOrder.shippingPhone && <p>📞 SĐT: {bookedOrder.shippingPhone}</p>}
+                              {bookedOrder.shippingNote && (
+                                <p className="italic text-emerald-700">📝 Ghi chú: {bookedOrder.shippingNote}</p>
+                              )}
+                            </div>
+
+                            {/* 2. Hàng nút Hủy đặt món */}
                             <div className="flex items-center justify-between pt-1.5 border-t border-emerald-200/60 text-xs">
                               {orderable && !pastDate ? (
                                 <>
@@ -967,12 +980,6 @@ export default function OrderPage() {
                             <div className="min-w-0 flex-1">
                               <p className="truncate text-sm font-semibold text-gray-900">{dish.nameVi}</p>
                               <p className="truncate text-xs text-gray-400">{dish.nameEn}</p>
-                              {dish.calories && (
-                                <div className="mt-0.5 flex items-center gap-1 text-xs text-amber-600 font-medium">
-                                  <Flame className="h-3 w-3 shrink-0" />
-                                  <span>{dish.calories} kcal</span>
-                                </div>
-                              )}
                             </div>
                           </div>
 
@@ -1055,7 +1062,7 @@ export default function OrderPage() {
           }}
           title="Xác nhận đặt món ăn"
           description="Kiểm tra thông tin trước khi hoàn tất đặt món"
-          size="sm"
+          size="lgs"
           footer={
             <div className="flex w-full justify-end gap-3">
               <Button
@@ -1092,9 +1099,6 @@ export default function OrderPage() {
               <div className="min-w-0 flex-1">
                 <h4 className="font-bold text-gray-900 text-sm truncate">{bookingTarget.dish.nameVi}</h4>
                 <p className="text-xs text-gray-500 truncate">{bookingTarget.dish.nameEn}</p>
-                {bookingTarget.dish.calories && (
-                  <p className="text-xs text-amber-600 font-semibold mt-1">{bookingTarget.dish.calories} kcal</p>
-                )}
               </div>
             </div>
 
@@ -1139,18 +1143,39 @@ export default function OrderPage() {
                   </button>
                 </div>
               </div>
-              <div className="flex justify-between">
-                <span>Giao tới:</span>
-                <strong className="text-gray-900 truncate max-w-[200px]" title={activeSubscription?.planShippingAddress || ""}>
-                  {activeSubscription?.planShippingAddress || "Địa chỉ mặc định"}
-                </strong>
+              {/* Địa chỉ nhận món */}
+              <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                <span className="text-gray-700 font-medium">Giao tới:</span>
+                <Input
+                  className="sm:w-2/3"
+                  placeholder="Nhập địa chỉ giao món..."
+                  value={customShippingAddress}
+                  onChange={(e) => setCustomShippingAddress(e.target.value)}
+                />
               </div>
-              <div className="flex justify-between">
-                <span>Số điện thoại:</span>
-                <strong className="text-gray-900">{activeSubscription?.planPhone || "SĐT mặc định"}</strong>
+
+              {/* Số điện thoại nhận món */}
+              <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                <span className="text-gray-700 font-medium">Số điện thoại:</span>
+                <Input
+                  className="sm:w-2/3"
+                  placeholder="Số điện thoại nhận món..."
+                  value={customShippingPhone}
+                  onChange={(e) => setCustomShippingPhone(e.target.value)}
+                />
+              </div>
+
+              {/* Ghi chú giao món */}
+              <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                <span className="text-gray-700 font-medium">Ghi chú:</span>
+                <Input
+                  className="sm:w-2/3"
+                  placeholder="Ghi chú (VD: Giao lên tầng 4, bấm chuông...)"
+                  value={customShippingNote}
+                  onChange={(e) => setCustomShippingNote(e.target.value)}
+                />
               </div>
             </div>
-
             {/* Meal deduction reminder */}
             <div className="rounded-xl border border-emerald-100 bg-emerald-50/60 p-3 text-xs text-emerald-800 leading-relaxed">
               💡 Thao tác này sẽ trừ <strong>1 bữa ăn</strong> trong gói <strong>{activeSubscription?.package?.name}</strong> của bạn (còn
