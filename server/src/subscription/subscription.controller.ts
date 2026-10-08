@@ -10,7 +10,10 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { SubscriptionService } from './subscription.service.js';
-import { CheckoutSubscriptionDto } from './dto/usersubscription.dto.js';
+import {
+  CheckoutSubscriptionDto,
+  UpdateSubscriptionInfoDto,
+} from './dto/usersubscription.dto.js';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { AdminGuard } from '../auth/guards/admin.guard.js';
 
@@ -37,7 +40,19 @@ export class SubscriptionController {
     return this.subscriptionService.updatePaymentStatus(id, status || 'PAID');
   }
 
-  // 👉 3. GET /api/subscriptions/my-subscriptions (Khách xem các gói đã mua của mình)
+  // 👉 3. PATCH /api/subscriptions/:id (Khách hàng cập nhật thông tin giao hàng gói)
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard)
+  async updateSubscriptionInfo(
+    @Req() req: any,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateSubscriptionInfoDto,
+  ) {
+    const userId = req.user.id || req.user.userId;
+    return this.subscriptionService.updateSubscriptionInfo(userId, id, dto);
+  }
+
+  // 👉 4. GET /api/subscriptions/my-subscriptions (Khách xem các gói đã mua của mình)
   @Get('my-subscriptions')
   @UseGuards(JwtAuthGuard)
   async getMySubscriptions(@Req() req: any) {
@@ -45,7 +60,7 @@ export class SubscriptionController {
     return this.subscriptionService.getUserSubscriptions(userId);
   }
 
-  // 👉 4. GET /api/subscriptions (Lấy toàn bộ danh sách để Admin duyệt đơn)
+  // 👉 5. GET /api/subscriptions (Lấy toàn bộ danh sách để Admin duyệt đơn)
   @Get()
   @UseGuards(JwtAuthGuard, AdminGuard)
   async getAllSubscriptions() {

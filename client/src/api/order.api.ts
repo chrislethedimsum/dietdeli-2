@@ -29,7 +29,8 @@ export interface Order {
   deliveryDate: string;
   mealShift: MealShift;
   shippingAddress: string;
-  shippingNote?: string;
+  shippingPhone?: string | null; // 👈 Thêm
+  shippingNote?: string | null;
   status: OrderStatus;
   createdAt: string;
   updatedAt: string;
@@ -45,6 +46,9 @@ export interface BookMealPayload {
     dishId: number;
     quantity: number;
   }[];
+  shippingAddress?: string; // 👈 Thêm
+  shippingPhone?: string; // 👈 Thêm
+  shippingNote?: string; // 👈 Thêm
 }
 
 export interface BookMealResponse {

@@ -7,6 +7,8 @@ import {
   IsNotEmpty,
   Min,
   ValidateNested,
+  IsOptional,
+  IsString,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { MealShift } from '@prisma/client';
@@ -44,4 +46,16 @@ export class BookMealDto {
   @ValidateNested({ each: true })
   @Type(() => OrderItemDto)
   items: OrderItemDto[];
+
+  @IsOptional()
+  @IsString()
+  shippingAddress?: string;
+
+  @IsOptional()
+  @IsString()
+  shippingPhone?: string;
+
+  @IsOptional()
+  @IsString()
+  shippingNote?: string;
 }

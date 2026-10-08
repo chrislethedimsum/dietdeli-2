@@ -1,9 +1,22 @@
+import { useState } from "react";
 import { useNavigate, Link } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardHeader, Table, Button, Chip } from "@heroui/react";
-import { Calendar, CreditCard, RefreshCw, Plus, UtensilsCrossed, Sparkles, Flame, CheckCircle2, Clock, ArrowRight } from "lucide-react";
+import {
+  Calendar,
+  CreditCard,
+  RefreshCw,
+  Plus,
+  UtensilsCrossed,
+  Sparkles,
+  Flame,
+  CheckCircle2,
+  Clock,
+  ArrowRight,
+  SquarePen,
+} from "lucide-react";
 import { subscriptionApi, type UserSubscription } from "@/api/subscription.api";
-import { type UserSubscriptionFormData } from "@/pages/user/MealPackagePage/components/EditMealPackageModal";
+import EditMealPackageModal from "./components/EditMealPackageModal";
 
 function getPaymentStatusBadge(status: string) {
   switch (status) {
@@ -44,10 +57,6 @@ const formatDate = (dateString?: string) => {
 };
 
 export default function MealPackagePage() {
-  const handleEditInfo = async (data: UserSubscriptionFormData) => {
-    await editUserSubscription(data);
-  };
-
   const navigate = useNavigate();
 
   // 1. Fetch danh sách gói ăn của người dùng
@@ -98,6 +107,14 @@ export default function MealPackagePage() {
   const activeSub = subscriptions.find((s) => s.paymentStatus === "PAID");
   const unpaidCount = subscriptions.filter((s) => s.paymentStatus === "UNPAID").length;
   const totalMealsLeft = subscriptions.filter((s) => s.paymentStatus === "PAID").reduce((acc, curr) => acc + curr.remainingMeals, 0);
+
+  const [editingSub, setEditingSub] = useState<UserSubscription | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  const handleEditInfo = (sub: UserSubscription) => {
+    setEditingSub(sub);
+    setIsEditModalOpen(true);
+  };
 
   return (
     <div className="space-y-6">
@@ -271,7 +288,7 @@ export default function MealPackagePage() {
                   <Table.ScrollContainer>
                     <Table.Content aria-label="Danh sách gói ăn cá nhân" className="min-w-[950px]">
                       <Table.Header>
-                        <Table.Column id="code" className="pb-3 text-xs font-medium uppercase text-gray-400 text-center">
+                        <Table.Column isRowHeader id="code" className="pb-3 text-xs font-medium uppercase text-gray-400 text-center">
                           Mã đơn / Gói
                         </Table.Column>
                         <Table.Column id="package" className="pb-3 text-xs font-medium uppercase text-gray-400 text-center">
@@ -383,8 +400,9 @@ export default function MealPackagePage() {
                                       size="sm"
                                       variant="ghost"
                                       className="my-1 text-xs text-emerald-700 border border-emerald-200 hover:bg-emerald-50 inline-flex items-center gap-1 cursor-pointer"
+                                      onClick={() => handleEditInfo(sub)}
                                     >
-                                      <CheckCircle2 size={13} className="text-emerald-600" />
+                                      <SquarePen size={13} className="text-emerald-600" />
                                       <span>Sửa thông tin</span>
                                     </Button>
                                     <Button
@@ -484,14 +502,24 @@ export default function MealPackagePage() {
                             <span>Thanh toán ngay ({sub.package.price?.toLocaleString("vi-VN")} ₫)</span>
                           </Button>
                         ) : (
-                          <Button
-                            variant="ghost"
-                            className="w-full text-xs text-emerald-700 border border-emerald-200 hover:bg-emerald-50 py-2 rounded-xl flex items-center justify-center gap-1.5 cursor-pointer"
-                            onClick={() => navigate("/user/registerpackage")}
-                          >
-                            <CheckCircle2 size={14} className="text-emerald-600" />
-                            <span>Gia hạn thêm gói</span>
-                          </Button>
+                          <div className="flex flex-col gap-2">
+                            <Button
+                              variant="ghost"
+                              className="w-full text-xs text-emerald-700 border border-emerald-200 hover:bg-emerald-50 py-2 rounded-xl flex items-center justify-center gap-1.5 cursor-pointer"
+                              onClick={() => handleEditInfo(sub)}
+                            >
+                              <CheckCircle2 size={14} className="text-emerald-600" />
+                              <span>Sửa thông tin</span>
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              className="w-full text-xs text-emerald-700 border border-emerald-200 hover:bg-emerald-50 py-2 rounded-xl flex items-center justify-center gap-1.5 cursor-pointer"
+                              onClick={() => navigate("/user/registerpackage")}
+                            >
+                              <CheckCircle2 size={14} className="text-emerald-600" />
+                              <span>Gia hạn thêm gói</span>
+                            </Button>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -502,6 +530,14 @@ export default function MealPackagePage() {
           )}
         </Card.Content>
       </Card>
+
+      {/* Modal chỉnh sửa thông tin gói ăn */}
+      <EditMealPackageModal
+        isOpen={isEditModalOpen}
+        onOpenChange={setIsEditModalOpen}
+        subscription={editingSub}
+        onSuccess={() => refetch()}
+      />
     </div>
   );
 }

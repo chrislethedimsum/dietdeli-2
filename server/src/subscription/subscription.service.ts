@@ -4,7 +4,10 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { CheckoutSubscriptionDto } from './dto/usersubscription.dto.js';
+import {
+  CheckoutSubscriptionDto,
+  UpdateSubscriptionInfoDto,
+} from './dto/usersubscription.dto.js';
 
 @Injectable()
 export class SubscriptionService {
@@ -147,5 +150,43 @@ export class SubscriptionService {
       },
       orderBy: { createdAt: 'desc' },
     });
+  }
+
+  // 5. CẬP NHẬT THÔNG TIN GIAO HÀNG/GHI CHÚ CỦA GÓI ĂN (User)
+  async updateSubscriptionInfo(
+    userId: number,
+    subscriptionId: number,
+    dto: UpdateSubscriptionInfoDto,
+  ) {
+    const subscription = await this.prisma.userSubscription.findFirst({
+      where: { id: subscriptionId, idUser: userId },
+    });
+
+    if (!subscription) {
+      throw new NotFoundException(
+        `Không tìm thấy gói ăn #${subscriptionId} thuộc về bạn.`,
+      );
+    }
+
+    const updated = await this.prisma.userSubscription.update({
+      where: { id: subscriptionId },
+      data: {
+        ...(dto.planShippingAddress !== undefined && {
+          planShippingAddress: dto.planShippingAddress.trim() || null,
+        }),
+        ...(dto.planPhone !== undefined && {
+          planPhone: dto.planPhone.trim() || null,
+        }),
+        ...(dto.userNote !== undefined && {
+          userNote: dto.userNote.trim() || null,
+        }),
+      },
+      include: { package: true },
+    });
+
+    return {
+      message: 'Cập nhật thông tin gói ăn thành công!',
+      subscription: updated,
+    };
   }
 }

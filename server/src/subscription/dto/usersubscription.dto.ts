@@ -28,3 +28,17 @@ export class CheckoutSubscriptionDto {
   @IsString()
   planPhone?: string;
 }
+
+export class UpdateSubscriptionInfoDto {
+  @IsOptional()
+  @IsString()
+  planShippingAddress?: string;
+
+  @IsOptional()
+  @IsString()
+  planPhone?: string;
+
+  @IsOptional()
+  @IsString()
+  userNote?: string;
+}
