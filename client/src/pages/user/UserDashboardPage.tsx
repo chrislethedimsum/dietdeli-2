@@ -1,155 +1,23 @@
-import { Card, CardHeader, Chip, Button, Avatar, Table } from "@heroui/react";
+import { Card, CardHeader, Chip, Button, Accordion } from "@heroui/react";
 import { getMenusByDateRange, type Menu } from "@/api/menu.api";
 import { useEffect, useState, useMemo } from "react";
 import { formatLocalDate, getCurrentWeekDates } from "@/utils";
-import { Tabs } from "@heroui/react";
 import { Link } from "react-router";
-import { UtensilsCrossed, Flame, ArrowRight, Utensils, RefreshCw } from "lucide-react";
-
-const statistics = [
-  {
-    title: "Tổng doanh thu",
-    value: "128.450.000 ₫",
-    change: "+12.5%",
-    description: "so với tháng trước",
-    type: "revenue",
-  },
-  {
-    title: "Đơn hàng",
-    value: "1,284",
-    change: "+8.2%",
-    description: "so với tháng trước",
-    type: "order",
-  },
-  {
-    title: "Khách hàng",
-    value: "856",
-    change: "+5.4%",
-    description: "so với tháng trước",
-    type: "customer",
-  },
-  {
-    title: "Subscription",
-    value: "324",
-    change: "+10.8%",
-    description: "đang hoạt động",
-    type: "subscription",
-  },
-];
-
-const recentOrders = [
-  {
-    id: "#DD-10284",
-    customer: "Nguyễn Minh Anh",
-    plan: "Healthy 7 ngày",
-    amount: "1.250.000 ₫",
-    status: "Đang giao",
-  },
-  {
-    id: "#DD-10283",
-    customer: "Trần Quốc Bảo",
-    plan: "Weight Loss",
-    amount: "980.000 ₫",
-    status: "Đã giao",
-  },
-  {
-    id: "#DD-10282",
-    customer: "Lê Thu Hà",
-    plan: "Balanced 14 ngày",
-    amount: "2.100.000 ₫",
-    status: "Đang chuẩn bị",
-  },
-  {
-    id: "#DD-10281",
-    customer: "Phạm Đức Anh",
-    plan: "Healthy 7 ngày",
-    amount: "1.250.000 ₫",
-    status: "Đã giao",
-  },
-  {
-    id: "#DD-10280",
-    customer: "Nguyễn Hoàng Nam",
-    plan: "Muscle Gain",
-    amount: "1.850.000 ₫",
-    status: "Đang giao",
-  },
-];
-function StatisticIcon({ type }: { type: string }) {
-  const commonClass = "h-6 w-6";
-
-  switch (type) {
-    case "revenue":
-      return (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          strokeWidth={1.8}
-          stroke="currentColor"
-          className={commonClass}
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M12 6v12m-3-2.5c0 1.1 1.34 2 3 2s3-.9 3-2-1.34-2-3-2-3-.9-3-2 1.34-2 3-2 3 .9 3 2"
-          />
-        </svg>
-      );
-
-    case "order":
-      return (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          strokeWidth={1.8}
-          stroke="currentColor"
-          className={commonClass}
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M6 2h12v20H6zM9 6h6M9 10h6M9 14h4" />
-        </svg>
-      );
-
-    case "customer":
-      return (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          strokeWidth={1.8}
-          stroke="currentColor"
-          className={commonClass}
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M15 19a6 6 0 0 0-12 0m6-8a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm6-3a3 3 0 1 1 0-6m0 10a5 5 0 0 1 4 2"
-          />
-        </svg>
-      );
-
-    case "subscription":
-      return (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          strokeWidth={1.8}
-          stroke="currentColor"
-          className={commonClass}
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M4.5 12a7.5 7.5 0 0 1 12.73-5.36L20 9m0 0V4m0 5h-5.5M19.5 12a7.5 7.5 0 0 1-12.73 5.36L4 15m0 0v5m0-5h5.5"
-          />
-        </svg>
-      );
-
-    default:
-      return null;
-  }
-}
+import { useQuery } from "@tanstack/react-query";
+import { orderApi, type Order } from "@/api/order.api";
+import { subscriptionApi } from "@/api/subscription.api";
+import {
+  UtensilsCrossed,
+  Flame,
+  ArrowRight,
+  Utensils,
+  RefreshCw,
+  Calendar,
+  Clock,
+  ChevronLeft,
+  ChevronRight,
+  PackageCheck,
+} from "lucide-react";
 
 function getStatusColor(status: string) {
   switch (status) {
@@ -307,6 +175,121 @@ export default function DashboardPage() {
     }
   };
 
+  // 1. Lấy toàn bộ lịch sử đơn hàng của user từ API
+  const [userOrders, setUserOrders] = useState<Order[]>([]);
+  const [loadingOrders, setLoadingOrders] = useState(false);
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        setLoadingOrders(true);
+        const data = await orderApi.getMyOrders();
+        setUserOrders(data);
+      } catch (error) {
+        console.error("Không thể tải lịch sử đơn hàng:", error);
+      } finally {
+        setLoadingOrders(false);
+      }
+    };
+    fetchOrders();
+  }, []);
+  // 2. Nhóm đơn hàng theo ngày nhận (deliveryDate) và sắp xếp ngày mới nhất lên đầu
+  const groupedOrders = useMemo(() => {
+    const map = new Map<string, Order[]>();
+    userOrders.forEach((order) => {
+      const dateStr = order.deliveryDate.slice(0, 10);
+      const list = map.get(dateStr) || [];
+      list.push(order);
+      map.set(dateStr, list);
+    });
+    // Sắp xếp ngày giảm dần (ngày mới nhất đứng đầu)
+    const sortedDates = Array.from(map.keys()).sort((a, b) => b.localeCompare(a));
+    return sortedDates.map((date) => ({
+      date,
+      dayName: getDayName(date),
+      formattedDate: formatDate(date),
+      orders: map.get(date) || [],
+    }));
+  }, [userOrders]);
+  // 3. Phân trang: Mỗi trang tối đa 6 ngày
+  const DAYS_PER_PAGE = 6;
+  const [currentPage, setCurrentPage] = useState(1);
+  const totalPages = Math.ceil(groupedOrders.length / DAYS_PER_PAGE);
+  const pagedDays = useMemo(() => {
+    const start = (currentPage - 1) * DAYS_PER_PAGE;
+    return groupedOrders.slice(start, start + DAYS_PER_PAGE);
+  }, [groupedOrders, currentPage]);
+  // 4. Accordion: Luôn mở sẵn ngày mới nhất (groupedOrders[0]), những ngày khác đóng
+  const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    if (groupedOrders.length > 0) {
+      setExpandedKeys(new Set([groupedOrders[0].date]));
+    }
+  }, [groupedOrders]);
+  // Hàm hiển thị nhãn trạng thái tiếng Việt
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case "ORDERED":
+        return "Đã đặt món";
+      case "COOKING":
+        return "Đang chuẩn bị";
+      case "SHIPPING":
+        return "Đang giao";
+      case "COMPLETED":
+        return "Đã giao thành công";
+      case "CANCELLED":
+        return "Đã hủy";
+      case "REJECTED":
+        return "Bếp từ chối";
+      default:
+        return status;
+    }
+  };
+
+  // 1. Fetch danh sách gói ăn của người dùng
+  const {
+    data: subscriptions = [],
+    isLoading,
+    isError,
+    refetch,
+    isFetching,
+  } = useQuery({
+    queryKey: ["my-subscriptions"],
+    queryFn: subscriptionApi.getMySubscriptions,
+  });
+
+  const fetchSubscriptions = async () => {
+    try {
+      setLoadingSubs(true);
+      const data = await subscriptionApi.getMySubscriptions();
+      setSubscriptions(data);
+    } catch (error) {
+      console.error("Không thể lấy danh sách gói ăn:", error);
+    } finally {
+      setLoadingSubs(false);
+    }
+  };
+
+  // 1. Gói ăn đang hoạt động
+  const activeSub = useMemo(() => {
+    return subscriptions.find((s) => s.paymentStatus === "PAID" && s.remainingMeals > 0);
+  }, [subscriptions]);
+  // 2. Tính số ngày còn lại của gói
+  const daysRemaining = useMemo(() => {
+    if (!activeSub) return 0;
+    const end = new Date(activeSub.endDate);
+    const now = new Date();
+    const diffTime = end.getTime() - now.getTime();
+    return Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+  }, [activeSub]);
+  // 3. Số bữa ăn đã đặt cho tuần này (T2 -> T7)
+  const scheduledThisWeek = useMemo(() => {
+    return userOrders.filter((o) => o.status !== "CANCELLED" && selectedWeekDates.includes(o.deliveryDate.slice(0, 10))).length;
+  }, [userOrders, selectedWeekDates]);
+  // 4. Tổng số bữa đã giao thành công
+  const completedOrders = useMemo(() => {
+    return userOrders.filter((o) => o.status === "COMPLETED").length;
+  }, [userOrders]);
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -321,31 +304,83 @@ export default function DashboardPage() {
         </Button>
       </div>
 
-      {/* Statistics */}
+      {/* Statistics dành riêng cho User */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {statistics.map((item) => (
-          <Card key={item.title} className="border border-gray-100">
-            <Card.Content className="p-5">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm text-gray-500">{item.title}</p>
-
-                  <p className="mt-2 text-2xl font-bold text-gray-900">{item.value}</p>
-                </div>
-
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
-                  <StatisticIcon type={item.type} />
-                </div>
+        {/* Card 1: Suất ăn còn lại */}
+        <Card className="border border-gray-100 shadow-sm">
+          <Card.Content className="p-5">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-xs font-medium text-gray-500">Suất ăn khả dụng</p>
+                <p className="mt-2 text-2xl font-bold text-gray-900">
+                  {activeSub ? activeSub.remainingMeals : 0} <span className="text-sm font-normal text-gray-500">bữa</span>
+                </p>
               </div>
-
-              <div className="mt-4 flex items-center gap-2">
-                <span className="text-sm font-medium text-emerald-600">{item.change}</span>
-
-                <span className="text-xs text-gray-400">{item.description}</span>
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                <Utensils className="h-5 w-5" />
               </div>
-            </Card.Content>
-          </Card>
-        ))}
+            </div>
+            <div className="mt-3 flex items-center gap-1.5 text-xs text-gray-500 truncate">
+              <span className="font-medium text-emerald-600">{activeSub?.package?.name || "Chưa có gói hoạt động"}</span>
+            </div>
+          </Card.Content>
+        </Card>
+
+        {/* Card 2: Thời hạn gói */}
+        <Card className="border border-gray-100 shadow-sm">
+          <Card.Content className="p-5">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-xs font-medium text-gray-500">Thời hạn gói ăn</p>
+                <p className="mt-2 text-2xl font-bold text-gray-900">{activeSub ? `Còn ${daysRemaining} ngày` : "Hết hạn"}</p>
+              </div>
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                <Calendar className="h-5 w-5" />
+              </div>
+            </div>
+            <div className="mt-3 text-xs text-gray-400 truncate">
+              {activeSub ? `Hạn đến: ${formatDate(activeSub.endDate)}` : "Đăng ký gói để bắt đầu"}
+            </div>
+          </Card.Content>
+        </Card>
+
+        {/* Card 3: Đã lên lịch tuần này */}
+        <Card className="border border-gray-100 shadow-sm">
+          <Card.Content className="p-5">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-xs font-medium text-gray-500">Lên lịch tuần này</p>
+                <p className="mt-2 text-2xl font-bold text-gray-900">
+                  {scheduledThisWeek} <span className="text-sm font-normal text-gray-500">/ 6 bữa</span>
+                </p>
+              </div>
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+                <Clock className="h-5 w-5" />
+              </div>
+            </div>
+            <div className="mt-3 text-xs text-amber-700 font-medium">
+              {scheduledThisWeek >= 6 ? "Đã đặt đủ cả tuần ✨" : `Còn ${6 - scheduledThisWeek} ngày chưa chọn`}
+            </div>
+          </Card.Content>
+        </Card>
+
+        {/* Card 4: Bữa ăn đã hoàn thành */}
+        <Card className="border border-gray-100 shadow-sm">
+          <Card.Content className="p-5">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-xs font-medium text-gray-500">Bữa ăn đã hoàn thành</p>
+                <p className="mt-2 text-2xl font-bold text-gray-900">
+                  {completedOrders} <span className="text-sm font-normal text-gray-500">bữa</span>
+                </p>
+              </div>
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-purple-50 text-purple-600">
+                <PackageCheck className="h-5 w-5" />
+              </div>
+            </div>
+            <div className="mt-3 text-xs text-gray-400">Đã giao thành công</div>
+          </Card.Content>
+        </Card>
       </div>
       {/* Menu Widget */}
       <Card className="w-full border border-gray-100 shadow-sm overflow-hidden">
@@ -477,128 +512,225 @@ export default function DashboardPage() {
         </Card.Content>
       </Card>
 
-      {/* Recent Orders */}
-      <Card className="border border-gray-100 shadow-sm">
-        <CardHeader className="px-5 pt-5">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-base font-semibold text-gray-900">Đơn hàng gần đây</h2>
-
-              <p className="text-sm text-gray-500">Các đơn hàng mới nhất</p>
+      {/* Theo dõi lịch sử đơn hàng theo từng ngày */}
+      <Card className="border border-gray-100 shadow-sm overflow-hidden">
+        <CardHeader className="px-5 pt-5 pb-3">
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 shrink-0">
+                <PackageCheck className="h-5 w-5" />
+              </div>
+              <div>
+                <h2 className="text-base font-semibold text-gray-900">Lịch sử đặt món</h2>
+                <p className="text-xs text-gray-500">
+                  {groupedOrders.length > 0
+                    ? `Theo dõi ${userOrders.length} suất ăn qua ${groupedOrders.length} ngày nhận món`
+                    : "Chưa có lịch sử đặt món"}
+                </p>
+              </div>
             </div>
 
-            <Button size="sm" variant="tertiary" className="text-success hover:bg-success/10">
-              Xem tất cả
-            </Button>
+            <Link
+              to="/user/order"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 hover:text-emerald-700 transition-colors"
+            >
+              <span>Đặt thêm món</span>
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
           </div>
         </CardHeader>
 
-        <Card.Content className="px-5">
-          {/* Desktop table */}
-          <div className="hidden overflow-x-auto md:block">
-            <Table>
-              <Table.ScrollContainer>
-                <Table.Content aria-label="Danh sách khách hàng" className="min-w-[950px]">
-                  <Table.Header>
-                    <Table.Column id="code" className="pb-3 text-xs font-medium uppercase text-gray-400">
-                      Mã đơn
-                    </Table.Column>
+        <Card.Content className="px-5 pb-5 pt-2">
+          {loadingOrders ? (
+            <div className="flex items-center justify-center py-12 text-gray-400">
+              <RefreshCw className="h-5 w-5 animate-spin mr-2 text-emerald-600" />
+              <span className="text-sm">Đang tải lịch sử đơn hàng...</span>
+            </div>
+          ) : groupedOrders.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-10 text-center rounded-xl border border-dashed border-gray-200 bg-gray-50/50">
+              <Calendar className="h-8 w-8 text-gray-300 mb-2" />
+              <p className="text-sm font-medium text-gray-600">Bạn chưa có đơn đặt món nào</p>
+              <p className="text-xs text-gray-400 mt-0.5">Hãy chọn các món dinh dưỡng từ thực đơn tuần để bắt đầu.</p>
+              <Link
+                to="/user/order"
+                className="mt-3 inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 transition"
+              >
+                Đặt món ngay
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {/* Accordion danh sách các ngày */}
+              <Accordion
+                allowsMultipleExpanded
+                expandedKeys={expandedKeys}
+                onExpandedChange={(keys) => setExpandedKeys(keys as Set<string>)}
+                className="w-full flex flex-col gap-2.5"
+              >
+                {pagedDays.map((day) => {
+                  const isLatest = day.date === groupedOrders[0]?.date;
 
-                    <Table.Column id="customer" className="pb-3 text-xs font-medium uppercase text-gray-400">
-                      Khách hàng
-                    </Table.Column>
-
-                    <Table.Column id="combo" className="pb-3 text-xs font-medium uppercase text-gray-400">
-                      Gói ăn
-                    </Table.Column>
-
-                    <Table.Column id="cost" className="pb-3 text-xs font-medium uppercase text-gray-400">
-                      Giá trị
-                    </Table.Column>
-
-                    <Table.Column id="status" className="pb-3 text-xs font-medium uppercase text-gray-400">
-                      Trạng thái
-                    </Table.Column>
-                  </Table.Header>
-
-                  <Table.Body>
-                    {recentOrders.map((order) => (
-                      <Table.Row key={order.id} className="border-b border-gray-50 last:border-0">
-                        <Table.Cell className="py-4 text-sm font-medium text-gray-900">{order.id}</Table.Cell>
-
-                        <Table.Cell className="py-4">
+                  return (
+                    <Accordion.Item
+                      key={day.date}
+                      id={day.date}
+                      className="border border-gray-100 rounded-xl overflow-hidden bg-white shadow-2xs"
+                    >
+                      <Accordion.Heading>
+                        <Accordion.Trigger className="w-full flex items-center justify-between p-3.5 bg-gray-50/70 hover:bg-gray-100/70 transition cursor-pointer">
                           <div className="flex items-center gap-3">
-                            <Avatar>
-                              <Avatar.Fallback className="bg-emerald-100 text-emerald-700">
-                                {order.customer
-                                  .split(" ")
-                                  .map((x) => x[0])
-                                  .join("")
-                                  .slice(-2)}
-                              </Avatar.Fallback>
-                            </Avatar>
-
-                            <span className="text-sm text-gray-700">{order.customer}</span>
+                            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white border border-gray-200 text-emerald-600 font-semibold shadow-2xs">
+                              <Calendar className="h-4 w-4" />
+                            </div>
+                            <div className="text-left">
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-bold text-gray-900">
+                                  {day.dayName}, {day.formattedDate}
+                                </span>
+                                {isLatest && (
+                                  <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+                                    Mới nhất
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-xs text-gray-400">{day.orders.length} suất ăn đã đặt</span>
+                            </div>
                           </div>
-                        </Table.Cell>
+                          <Accordion.Indicator />
+                        </Accordion.Trigger>
+                      </Accordion.Heading>
 
-                        <Table.Cell className="py-4 text-sm text-gray-600">{order.plan}</Table.Cell>
+                      <Accordion.Panel>
+                        <Accordion.Body className="grid grid-cols-1 sm:grid-cols-2 gap-6 p-4 space-y-3 bg-white">
+                          {day.orders.map((order) => (
+                            <div key={order.id} className="rounded-xl border border-gray-100 p-3.5 space-y-2.5 bg-gray-50/30">
+                              {/* Ca ăn & Trạng thái */}
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <span
+                                    className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-semibold ${
+                                      order.mealShift === "LUNCH"
+                                        ? "bg-amber-50 text-amber-700 border border-amber-200/60"
+                                        : "bg-purple-50 text-purple-700 border border-purple-200/60"
+                                    }`}
+                                  >
+                                    <Clock className="h-3 w-3" />
+                                    {order.mealShift === "LUNCH" ? "Bữa trưa (Giao trước 11:30)" : "Bữa tối (Giao trước 18:00)"}
+                                  </span>
+                                  <span className="text-xs text-gray-400">Đơn #{order.id}</span>
+                                </div>
 
-                        <Table.Cell className="py-4 text-sm font-medium text-gray-900">{order.amount}</Table.Cell>
+                                <Chip size="sm" variant="soft" color={getStatusColor(order.status) as any}>
+                                  {getStatusLabel(order.status)}
+                                </Chip>
+                              </div>
 
-                        <Table.Cell className="py-4">
-                          <Chip
-                            size="sm"
-                            variant="soft"
-                            color={getStatusColor(order.status) as "success" | "accent" | "warning" | "default"}
-                          >
-                            {order.status}
-                          </Chip>
-                        </Table.Cell>
-                      </Table.Row>
+                              {/* Danh sách món ăn trong đơn */}
+                              <div className="space-y-2">
+                                {order.orderItems.map((item) => (
+                                  <div key={item.id} className="flex items-center gap-3 bg-white p-2.5 rounded-lg border border-gray-100">
+                                    <div className="h-12 w-12 rounded-lg bg-gray-100 overflow-hidden shrink-0">
+                                      {item.dish.image ? (
+                                        <img src={item.dish.image} alt={item.dish.nameVi} className="h-full w-full object-cover" />
+                                      ) : (
+                                        <div className="h-full w-full flex items-center justify-center text-xs text-emerald-600 bg-emerald-50">
+                                          <Utensils className="h-5 w-5" />
+                                        </div>
+                                      )}
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                      <p className="text-sm font-semibold text-gray-900 truncate">{item.dish.nameVi}</p>
+                                      <div className="flex items-center gap-2 text-xs text-gray-400 mt-0.5">
+                                        <span>{item.dish.nameEn}</span>
+                                        {item.dish.calories && (
+                                          <span className="text-amber-600 font-medium">🔥 {item.dish.calories} kcal</span>
+                                        )}
+                                      </div>
+                                    </div>
+                                    <span className="text-xs font-semibold text-gray-700 bg-gray-100 px-2 py-1 rounded-md shrink-0">
+                                      x{item.quantity}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+
+                              {/* Thông tin giao hàng */}
+                              {(order.shippingAddress || order.shippingPhone || order.shippingNote) && (
+                                <div className="text-[11px] text-gray-500 bg-white p-2.5 rounded-lg border border-gray-100 space-y-0.5">
+                                  {order.shippingAddress && (
+                                    <p className="truncate">
+                                      📍 <strong className="text-gray-700">Giao tới:</strong> {order.shippingAddress}
+                                    </p>
+                                  )}
+                                  {order.shippingPhone && (
+                                    <p>
+                                      📞 <strong className="text-gray-700">SĐT:</strong> {order.shippingPhone}
+                                    </p>
+                                  )}
+                                  {order.shippingNote && (
+                                    <p className="italic text-gray-400">
+                                      📝 <strong className="text-gray-600">Ghi chú:</strong> {order.shippingNote}
+                                    </p>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </Accordion.Body>
+                      </Accordion.Panel>
+                    </Accordion.Item>
+                  );
+                })}
+              </Accordion>
+
+              {/* 👉 Thanh phân trang (Chỉ hiển thị khi tổng số ngày > 6) */}
+              {groupedOrders.length > DAYS_PER_PAGE && (
+                <div className="flex flex-col sm:flex-row items-center justify-between border-t border-gray-100 pt-4 gap-3">
+                  <span className="text-xs text-gray-500">
+                    Hiển thị <strong>{pagedDays.length}</strong> / <strong>{groupedOrders.length}</strong> ngày (Trang {currentPage} /{" "}
+                    {totalPages})
+                  </span>
+
+                  <div className="flex items-center gap-1.5">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      isDisabled={currentPage === 1}
+                      onPress={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      className="text-xs"
+                    >
+                      <ChevronLeft className="h-3.5 w-3.5 mr-1" />
+                      Trước
+                    </Button>
+
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                      <Button
+                        key={page}
+                        size="sm"
+                        variant={currentPage === page ? "solid" : "ghost"}
+                        color={currentPage === page ? "primary" : "default"}
+                        onPress={() => setCurrentPage(page)}
+                        className="min-w-8 text-xs font-semibold"
+                      >
+                        {page}
+                      </Button>
                     ))}
-                  </Table.Body>
-                </Table.Content>
-              </Table.ScrollContainer>
-            </Table>
-          </div>
 
-          {/* Mobile cards */}
-          <div className="space-y-3 md:hidden">
-            {recentOrders.map((order) => (
-              <div key={order.id} className="rounded-xl border border-gray-100 p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <Avatar size="sm">
-                      <Avatar.Fallback className="bg-emerald-100 text-emerald-700">
-                        {order.customer
-                          .split(" ")
-                          .map((x) => x[0])
-                          .join("")
-                          .slice(-2)}
-                      </Avatar.Fallback>
-                    </Avatar>
-
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">{order.customer}</p>
-
-                      <p className="text-xs text-gray-400">{order.id}</p>
-                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      isDisabled={currentPage === totalPages}
+                      onPress={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                      className="text-xs"
+                    >
+                      Sau
+                      <ChevronRight className="h-3.5 w-3.5 ml-1" />
+                    </Button>
                   </div>
-
-                  <Chip size="sm" variant="soft" color={getStatusColor(order.status) as "success" | "accent" | "warning" | "default"}>
-                    {order.status}
-                  </Chip>
                 </div>
-
-                <div className="mt-3 flex items-center justify-between border-t border-gray-100 pt-3">
-                  <span className="text-xs text-gray-500">{order.plan}</span>
-
-                  <span className="text-sm font-semibold text-gray-900">{order.amount}</span>
-                </div>
-              </div>
-            ))}
-          </div>
+              )}
+            </div>
+          )}
         </Card.Content>
       </Card>
     </div>

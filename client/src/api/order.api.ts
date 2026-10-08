@@ -37,6 +37,7 @@ export interface Order {
   updatedAt: string;
   orderItems: OrderItem[];
   package?: MealPackage;
+  user?: User;
 }
 
 export interface BookMealPayload {

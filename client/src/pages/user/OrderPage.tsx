@@ -7,7 +7,6 @@ import {
   CheckCircle2,
   AlertCircle,
   XCircle,
-  Flame,
   Calendar,
   Sparkles,
   MapPin,
@@ -17,7 +16,6 @@ import {
   ShieldCheck,
   ChevronRight,
   RefreshCw,
-  MapPinHouse,
 } from "lucide-react";
 
 import { getMenusByDateRange, type Menu } from "@/api/menu.api";
@@ -1062,7 +1060,7 @@ export default function OrderPage() {
           }}
           title="Xác nhận đặt món ăn"
           description="Kiểm tra thông tin trước khi hoàn tất đặt món"
-          size="lgs"
+          size="lg"
           footer={
             <div className="flex w-full justify-end gap-3">
               <Button
