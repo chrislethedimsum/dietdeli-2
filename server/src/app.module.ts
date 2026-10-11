@@ -11,6 +11,7 @@ import { UploadModule } from './upload/upload.module.js';
 import { MenuModule } from './menu/menu.module.js';
 import { OrderModule } from './order/order.module.js';
 import { UsersModule } from './users/users.module.js';
+import { MealPackagesModule } from './mealPackages/mealPackages.module.js';
 
 @Module({
   imports: [
@@ -23,7 +24,8 @@ import { UsersModule } from './users/users.module.js';
     SubscriptionModule,
     UploadModule,
     OrderModule,
-    UsersModule 
+    UsersModule,
+    MealPackagesModule
   ],
   controllers: [AppController],
   providers: [AppService],
