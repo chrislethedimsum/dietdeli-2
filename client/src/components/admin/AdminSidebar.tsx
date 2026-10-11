@@ -29,6 +29,11 @@ const menuItems = [
     icon: "order",
   },
   {
+    label: "Meal Packages",
+    path: "/admin/meal-package",
+    icon: "meal-package",
+  },
+  {
     label: "Customers",
     path: "/admin/customers",
     icon: "customer",
@@ -71,6 +76,17 @@ function Icon({ type }: { type: string }) {
       return (
         <svg {...common}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M6 2h12v20H6zM9 6h6M9 10h6M9 14h4" />
+        </svg>
+      );
+
+    case "meal-package":
+      return (
+        <svg {...common}>
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.657 0 3-.895 3-2s-1.343-2-3-2-3 .895-3 2 1.343 2 3 2Zm0 8v4m0-12V4"
+          />
         </svg>
       );
 
