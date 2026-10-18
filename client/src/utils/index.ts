@@ -61,3 +61,22 @@ export const getCurrentWeekDates = () => {
         return formatLocalDate(date);
     });
 };
+
+export const getErrorMessage = (error: unknown): string => {
+    const err = error as {
+        response?: {
+            data?: {
+                message?: string | string[];
+            };
+        };
+        message?: string;
+    };
+
+    const message = err?.response?.data?.message;
+
+    if (Array.isArray(message)) {
+        return message.join(", ");
+    }
+
+    return message || err?.message || "Đã xảy ra lỗi. Vui lòng thử lại.";
+};

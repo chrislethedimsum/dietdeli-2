@@ -19,6 +19,8 @@ import PaymentPage from "./pages/user/MealPackagePage/PaymentPage";
 import MealPackagePage from "./pages/user/MealPackagePage/MealPackagePage";
 import RegisterMealPackagePage from "./pages/user/MealPackagePage/RegisterMealPackagePage";
 import OrderPage from "@/pages/user/OrderPage";
+import ProfilePage from "./pages/profile";
+import MealPackagesAdminPage from "./pages/admin/MealPackage";
 
 const requireAuth = (Component: React.ComponentType) => {
   return (props: React.ComponentProps<React.ComponentType>) => {
@@ -79,6 +81,7 @@ export const router = createBrowserRouter([
       { path: "mealpackage", Component: MealPackagePage },
       { path: "registerpackage", Component: RegisterMealPackagePage },
       { path: "order", Component: OrderPage },
+      { path: "profile", Component: ProfilePage },
     ],
   },
   // 4. Nhóm Admin (Bảo vệ bởi requireAdmin)
@@ -91,6 +94,8 @@ export const router = createBrowserRouter([
       { path: "dishes", Component: DishesPage },
       { path: "orders", Component: OrdersPage },
       { path: "customers", Component: CustomersPage },
+      { path: "profile", Component: ProfilePage },
+      { path: "meal-package", Component: MealPackagesAdminPage },
     ],
   },
 ]);
